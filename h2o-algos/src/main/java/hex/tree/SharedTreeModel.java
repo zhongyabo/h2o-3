@@ -1,10 +1,6 @@
 package hex.tree;
 
 import hex.*;
-
-import static hex.ModelCategory.Binomial;
-import static hex.genmodel.GenModel.createAuxKey;
-
 import hex.glm.GLMModel;
 import hex.util.LinearAlgebraUtils;
 import water.*;
@@ -21,6 +17,10 @@ import water.util.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import static hex.ModelCategory.Binomial;
+import static hex.genmodel.GenModel.createAuxKey;
+import static java.lang.Math.round;
 
 public abstract class SharedTreeModel<
         M extends SharedTreeModel<M, P, O>,
@@ -77,6 +77,8 @@ public abstract class SharedTreeModel<
     public boolean _calibrate_model = false; // Use Platt Scaling
     public Key<Frame> _calibration_frame;
 
+    public int _nBinsAUC2 = -1;  // used to control number of bins to gather the AUC2 arrays.
+
     public Frame calib() { return _calibration_frame == null ? null : _calibration_frame.get(); }
 
     @Override public long progressUnits() { return _ntrees + (_histogram_type==HistogramType.QuantilesGlobal || _histogram_type==HistogramType.RoundRobin ? 1 : 0); }
@@ -120,11 +122,40 @@ public abstract class SharedTreeModel<
 
   @Override public ModelMetricsSupervised.MetricBuilderSupervised makeMetricBuilder(String[] domain) {
     switch(_output.getModelCategory()) {
-      case Binomial:    return new ModelMetricsBinomial.MetricBuilderBinomial(domain);
+      case Binomial: return new ModelMetricsBinomial.MetricBuilderBinomial(domain, setAUCWorkingBinSize(_parms.train().numRows()));
       case Multinomial: return new ModelMetricsMultinomial.MetricBuilderMultinomial(_output.nclasses(),domain);
       case Regression:  return new ModelMetricsRegression.MetricBuilderRegression();
       default: throw H2O.unimpl();
     }
+  }
+
+  // current AUC2.NBINS = 400 only.  During mergeOneBin operation, depending on the chunking situation, we
+  // can get different final results.  Hence, I am proposing to use a larger bin size during the data
+  // collection process to avoid bin merging.  This is done by using the largest bin size necessary which
+  // is 2*trainining frame row count.  However, when this takes up too much memory, we will try to shrink
+  // the working bin size in order to fit the memory.  When this happens, perfect reproducibility across
+  // different network sizes may not be possible.  To avoid this, call GBM with fewer trees and/or shallower
+  // trees.  Good luck.
+  public int setAUCWorkingBinSize(long numrows) {
+    if (numrows <= AUC2.NBINS)
+      return AUC2.NBINS; // no need to change AUC bin size in this case
+
+    int nBinsAUC2;
+    HeartBeat hb= H2O.SELF._heartbeat;
+    long max_mem = H2O.SELF._heartbeat.get_free_mem();
+    if (numrows*2 > Integer.MAX_VALUE)
+      nBinsAUC2 = Integer.MAX_VALUE/2-1;   // maximum bin size needed.
+    else
+      nBinsAUC2 = (int) numrows;
+
+    int overEstimate = 4; // overEstimate true memory need by 4 times
+    long mem_per_bin = 2*4*hb._cpus_allowed*8*overEstimate;
+    long tot_mem_estimate = nBinsAUC2*mem_per_bin; // 4 arrays _ths, _fps, _tps, _sqe
+
+    if (tot_mem_estimate > max_mem)
+      nBinsAUC2 = round(max_mem/mem_per_bin);
+
+    return nBinsAUC2;
   }
 
   public abstract static class SharedTreeOutput extends Model.Output {
