@@ -18,6 +18,8 @@ public class GBMModel extends SharedTreeModel<GBMModel, GBMModel.GBMParameters, 
     public double _col_sample_rate;
     public double _max_abs_leafnode_pred;
     public double _pred_noise_bandwidth;
+    public int _nBinsAUC2 = -1;  // used to control number of bins to gather the AUC2 arrays.
+    // Final array size will be NBIN size.
 
     public GBMParameters() {
       super();
