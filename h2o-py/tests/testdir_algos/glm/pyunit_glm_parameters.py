@@ -6,6 +6,7 @@ import h2o
 from h2o.estimators import H2OGeneralizedLinearEstimator
 from h2o.exceptions import H2OTypeError
 from tests import pyunit_utils
+from h2o.estimators.gbm import H2OGradientBoostingEstimator
 
 
 def test_glm_params():
@@ -16,6 +17,7 @@ def test_glm_params():
                                    "n": [0] * 5, "w": [1] * 5})
 
     model = H2OGeneralizedLinearEstimator()
+    model2 = H2OGradientBoostingEstimator()
     model.training_frame = df
     model.validation_frame = df
     model.nfolds = 3

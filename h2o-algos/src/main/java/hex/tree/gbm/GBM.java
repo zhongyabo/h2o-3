@@ -133,6 +133,7 @@ public class GBM extends SharedTree<GBMModel,GBMModel.GBMParameters,GBMModel.GBM
     case bernoulli:
       if( _nclass != 2 /*&& !couldBeBool(_response)*/)
         error("_distribution", H2O.technote(2, "Binomial requires the response to be a 2-class categorical"));
+
       // need to check to make sure we have enough memory to accommodate AUC2 actions
       break;
     case modified_huber:
