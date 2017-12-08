@@ -248,7 +248,6 @@ public class AUC2 extends Iced {
     // error, or -1 if not known.  Requires a linear scan to find.
     int    _ssx;
     public boolean _reproducibilityError = false;  // true if potential reproducibility can happen
-    public int mergeStep = -1;  // denote start of merge.
 
     public AUCBuilder(int nBins) {
       this(nBins, nBins);
@@ -339,6 +338,7 @@ public class AUC2 extends Iced {
       }
     }
 
+    // Can speed this one up
     public void reduce( AUCBuilder bldr ) {
       // Merge sort the 2 sorted lists into the double-sized arrays.  The tail
       // half of the double-sized array is unused, but the front half is

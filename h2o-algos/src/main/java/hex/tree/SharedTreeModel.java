@@ -2,6 +2,7 @@ package hex.tree;
 
 import hex.*;
 import hex.glm.GLMModel;
+import hex.tree.gbm.GBMModel;
 import hex.util.LinearAlgebraUtils;
 import water.*;
 import water.codegen.CodeGenerator;
@@ -27,6 +28,8 @@ public abstract class SharedTreeModel<
         P extends SharedTreeModel.SharedTreeParameters,
         O extends SharedTreeModel.SharedTreeOutput
         > extends Model<M, P, O> implements Model.LeafNodeAssignment, Model.GetMostImportantFeatures {
+
+  private int _nWorkingBins = 4000; // From experiment, this will take a maximum of 12 secs to score;
 
   @Override
   public String[] getMostImportantFeatures(int n) {
@@ -76,8 +79,6 @@ public abstract class SharedTreeModel<
 
     public boolean _calibrate_model = false; // Use Platt Scaling
     public Key<Frame> _calibration_frame;
-
-    public int _nBinsAUC2 = -1;  // used to control number of bins to gather the AUC2 arrays.
 
     public Frame calib() { return _calibration_frame == null ? null : _calibration_frame.get(); }
 
@@ -137,6 +138,12 @@ public abstract class SharedTreeModel<
   // different network sizes may not be possible.  To avoid this, call GBM with fewer trees and/or shallower
   // trees.  Good luck.
   public int setAUCWorkingBinSize(long numrows) {
+    if (!(this instanceof GBMModel))  // only set bin numbers for GBM model for now.
+      return AUC2.NBINS;
+
+    if (!(((GBMModel.GBMParameters) this._parms)._true_reproducibility))
+      return Math.min(_nWorkingBins, (int) numrows); // care about speed, not reproducibility at this point
+
     if (numrows <= AUC2.NBINS)
       return AUC2.NBINS; // no need to change AUC bin size in this case
 
