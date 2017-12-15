@@ -142,7 +142,7 @@ public class AUC2 extends Iced {
 
   public AUC2( AUCBuilder bldr ) {
     // Copy result arrays into base object, shrinking to match actual bins
-    bldr.removeDupsShrink(NBINS, false); // make sure arrays are at correct size
+    bldr.removeDupsShrink(NBINS, false, false); // make sure arrays are at correct size
 
     _nBins = bldr._n;
     assert _nBins >= 1 : "Must have >= 1 bins for AUC calculation, but got " + _nBins;
@@ -294,8 +294,7 @@ public class AUC2 extends Iced {
           else         _tps[idx]+=w;
           _ths[idx] = _ths[idx] + (pred-_ths[idx])/oldk;
           _sqe[idx] = _sqe[idx] + d0;
-          if (idx < (_nBins-1))
-            _sqeEst[idx] = _sqe[idx]+_sqe[idx+1]+compute_delta_error(_ths[idx+1], k(idx+1), _ths[idx], k(idx));
+          updateSqeEst(idx, _nBins);
           assert ssx == find_smallest();
         }
       } else {  // insert this row
@@ -315,7 +314,7 @@ public class AUC2 extends Iced {
         // Insert into the histogram
         _ths[idx] = pred;         // New histogram center
         _sqe[idx] = 0;            // Only 1 point, so no squared error
-        _sqeEst[idx] = 0;
+
         if (act == 0) {
           _tps[idx] = 0;
           _fps[idx] = w;
@@ -323,15 +322,28 @@ public class AUC2 extends Iced {
           _tps[idx] = w;
           _fps[idx] = 0;
         }
+        updateSqeEst(idx, _n);
         _n++;
       }
 
       // Merge duplicate rows in _ths.  May require many merges.  May or may  not cause reproducibility issue
-      removeDupsShrink(_nBins, false);
+      removeDupsShrink(_nBins, false, false);
+    }
+
+    public void updateSqeEst(int idx, int aSize) {
+      if (idx > 0) {
+        int idxM1 = idx-1;
+        _sqeEst[idx-1] = _ths[idx]+_ths[idxM1]+compute_delta_error(_ths[idxM1], k(idxM1), _ths[idx], k(idx));
+      }
+
+      if (idx < aSize)  {
+        int idxP1 = idx+1;
+        _sqeEst[idx] = _ths[idx]+_ths[idxP1]+compute_delta_error(_ths[idxP1], k(idxP1), _ths[idx], k(idx));
+      }
     }
 
     // Merge duplicate rows in all 4 arrays.
-    public void removeDupsShrink(int maxBinSize, boolean setrError) {
+    public void removeDupsShrink(int maxBinSize, boolean setrError, boolean updateAllSeqEst) {
       // Merge duplicate rows in _ths.  May require many merges.
       int startIndex = 0;
       while ((dups(startIndex) && (startIndex < _n)))
@@ -339,6 +351,9 @@ public class AUC2 extends Iced {
 
       if (_n > maxBinSize && setrError)
         _reproducibilityError = true;
+
+      if (updateAllSeqEst)
+        updateAllSeqEst();
 
       while(_n > maxBinSize) {
         mergeOneBin();
@@ -366,10 +381,17 @@ public class AUC2 extends Iced {
         if( self_is_larger ) x--; else y--;
       }
       _n += bldr._n;
-      //assert sorted();
 
       // Merge duplicate rows in _ths.  May require many merges.  May or may  not cause reproducibility issue
-      removeDupsShrink(_workingNBins, true);
+      removeDupsShrink(_workingNBins, true, true);
+    }
+
+    private void updateAllSeqEst() {
+      int nM1 = _n-1;
+      for (int index = 0; index < nM1; index++) {
+        int indexP1 = index+1;
+        _sqeEst[index] = _ths[index]+_ths[indexP1]+compute_delta_error(_ths[indexP1], k(indexP1), _ths[index], k(index));
+      }
     }
 
     private int mergeOneBin( ) {
@@ -392,15 +414,7 @@ public class AUC2 extends Iced {
       System.arraycopy(_fps,ssx+2,_fps,ssx+1,_n-ssx-2);
       System.arraycopy(_sqeEst,ssx+2,_sqeEst,ssx+1,_n-ssx-2);
 
-      if (ssx > 0) {  // modify sqeEst for index at ssx-1
-        int ssxM1 = ssx-1;
-        _sqeEst[ssxM1] = _sqe[ssxM1] + _sqe[ssx] + compute_delta_error(_ths[ssx], k0, _ths[ssxM1], k(ssxM1));
-      }
-
-      int ssxP1 = ssx+1;
-      if (ssxP1 < _n) { // modify sqeEst for index at ssx
-        _sqeEst[ssx] = _sqe[ssx]+_sqe[ssxP1]+compute_delta_error(_ths[ssxP1], k1, _ths[ssx], k0);
-      }
+      updateSqeEst(ssx, _n);
       Log.info("merge index: "+ssx+" sqe is "+_sqe[ssx]+" and threshold is "+_ths[ssx]);
       _n--;
       _ssx = -1;   // reset so that the next mergeOneBin() can start over
