@@ -152,8 +152,8 @@ public abstract class SharedTreeModel<
       nBinsAUC2 = (int) numChunks*AUC2.NBINS;
 
     int overEstimate = 4; // overEstimate true memory need by 4 times
-    long mem_per_bin = 2*4*hb._cpus_allowed*8*overEstimate;
-    long tot_mem_estimate = nBinsAUC2*mem_per_bin; // 4 arrays _ths, _fps, _tps, _sqe
+    long mem_per_bin = 2*5*hb._cpus_allowed*8*overEstimate;
+    long tot_mem_estimate = nBinsAUC2*mem_per_bin; // 5 arrays _ths, _fps, _tps, _sqe, _sqeEst
 
     if (tot_mem_estimate > max_mem)
       nBinsAUC2 = round(max_mem/mem_per_bin);

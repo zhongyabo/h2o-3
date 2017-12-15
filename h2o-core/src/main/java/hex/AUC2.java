@@ -5,10 +5,12 @@ import water.MRTask;
 import water.exceptions.H2OIllegalArgumentException;
 import water.fvec.Chunk;
 import water.fvec.Vec;
+import water.util.Log;
 import water.util.fp.Function;
 import water.util.fp.Functions;
 
 import java.util.Arrays;
+
 import static hex.AUC2.ThresholdCriterion.precision;
 import static hex.AUC2.ThresholdCriterion.recall;
 
@@ -242,6 +244,7 @@ public class AUC2 extends Iced {
     final double _sqe[];        // Histogram bins, squared error
     final double _tps[];        // Histogram bins, true  positives
     final double _fps[];        // Histogram bins, false positives
+    final double _sqeEst[];     // estimate squared error if bins are merged
     // Merging this bin with the next gives the least increase in squared
     // error, or -1 if not known.  Requires a linear scan to find.
     int    _ssx;
@@ -258,6 +261,7 @@ public class AUC2 extends Iced {
       _sqe = new double[_workingNBins<<1]; // Squared error (variance) in this bin
       _tps = new double[_workingNBins<<1]; // True  positives
       _fps = new double[_workingNBins<<1]; // False positives
+      _sqeEst = new double[_workingNBins<<1];
       _ssx = -1;
     }
 
@@ -290,6 +294,8 @@ public class AUC2 extends Iced {
           else         _tps[idx]+=w;
           _ths[idx] = _ths[idx] + (pred-_ths[idx])/oldk;
           _sqe[idx] = _sqe[idx] + d0;
+          if (idx < (_nBins-1))
+            _sqeEst[idx] = _sqe[idx]+_sqe[idx+1]+compute_delta_error(_ths[idx+1], k(idx+1), _ths[idx], k(idx));
           assert ssx == find_smallest();
         }
       } else {  // insert this row
@@ -305,9 +311,11 @@ public class AUC2 extends Iced {
         System.arraycopy(_sqe, idx, _sqe, idx + 1, _n - idx);
         System.arraycopy(_tps, idx, _tps, idx + 1, _n - idx);
         System.arraycopy(_fps, idx, _fps, idx + 1, _n - idx);
+        System.arraycopy(_sqeEst, idx, _sqeEst, idx+1, _n-idx);
         // Insert into the histogram
         _ths[idx] = pred;         // New histogram center
         _sqe[idx] = 0;            // Only 1 point, so no squared error
+        _sqeEst[idx] = 0;
         if (act == 0) {
           _tps[idx] = 0;
           _fps[idx] = w;
@@ -354,6 +362,7 @@ public class AUC2 extends Iced {
         _sqe[x+y+1] = b._sqe[idx];
         _tps[x+y+1] = b._tps[idx];
         _fps[x+y+1] = b._fps[idx];
+        _sqeEst[x+y+1] = b._sqeEst[x+y+1];
         if( self_is_larger ) x--; else y--;
       }
       _n += bldr._n;
@@ -366,7 +375,7 @@ public class AUC2 extends Iced {
     private int mergeOneBin( ) {
       // Too many bins; must merge bins.  Merge into bins with least total
       // squared error.  Horrible slowness linear arraycopy.
-      int ssx = (_ssx > 0)? _ssx : find_smallest(); // Dups() will set _ssx
+      int ssx = (_ssx > 0)? _ssx : find_smallest2(); // Dups() will set _ssx
 
       // Merge two bins.  Classic bins merging by averaging the histogram
       // centers based on counts.
@@ -381,6 +390,18 @@ public class AUC2 extends Iced {
       System.arraycopy(_sqe,ssx+2,_sqe,ssx+1,_n-ssx-2);
       System.arraycopy(_tps,ssx+2,_tps,ssx+1,_n-ssx-2);
       System.arraycopy(_fps,ssx+2,_fps,ssx+1,_n-ssx-2);
+      System.arraycopy(_sqeEst,ssx+2,_sqeEst,ssx+1,_n-ssx-2);
+
+      if (ssx > 0) {  // modify sqeEst for index at ssx-1
+        int ssxM1 = ssx-1;
+        _sqeEst[ssxM1] = _sqe[ssxM1] + _sqe[ssx] + compute_delta_error(_ths[ssx], k0, _ths[ssxM1], k(ssxM1));
+      }
+
+      int ssxP1 = ssx+1;
+      if (ssxP1 < _n) { // modify sqeEst for index at ssx
+        _sqeEst[ssx] = _sqe[ssx]+_sqe[ssxP1]+compute_delta_error(_ths[ssxP1], k1, _ths[ssx], k0);
+      }
+      Log.info("merge index: "+ssx+" sqe is "+_sqe[ssx]+" and threshold is "+_ths[ssx]);
       _n--;
       _ssx = -1;   // reset so that the next mergeOneBin() can start over
       return ssx;
@@ -393,6 +414,18 @@ public class AUC2 extends Iced {
     // but this leads to bad errors if the probabilities are sorted.  Also
     // tried the original: merge bins with the least distance between bin
     // centers.  Same problem for sorted data.
+    private int find_smallest2() {
+      double minSQE = Double.MAX_VALUE;
+      int minI = -1;
+      int n = _n;
+      for( int i=0; i<n-1; i++ ) {
+        if( _sqeEst[i] < minSQE ) {
+          minI = i;  minSQE =  _sqeEst[i];
+        }
+      }
+      return minI;
+    }
+
     private int find_smallest() {
       if( _ssx == -1 ) return (_ssx = find_smallest_impl());
       assert _ssx == find_smallest_impl();
