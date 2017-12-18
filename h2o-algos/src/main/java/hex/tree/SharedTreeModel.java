@@ -139,7 +139,9 @@ public abstract class SharedTreeModel<
   // each chunk.  This will ensure reproducibility across same cluster runs with exactly the same machines,
   // same memory allocations.
   public int setAUCWorkingBinSize(long numChunks, boolean finalScore) {
-    if (!(_parms instanceof GBMModel.GBMParameters) || !finalScore || (numChunks <= 1) ||
+    if (!(_parms instanceof GBMModel.GBMParameters)   // only care about GBMModel here
+            || (!finalScore && _parms._stopping_rounds <= 0) ||
+            (numChunks <= 1) || // only matters if numChunk > 1
             ((_parms instanceof GBMModel.GBMParameters) && !(((GBMModel.GBMParameters) _parms)._true_reproducibility)))
       return AUC2.NBINS;  // don't care about reproducibility here
 

@@ -274,49 +274,51 @@ public class AUC2 extends Iced {
       }
       idx = -idx-1;             // Get index to insert at
 
-      // If already full bins, try to instantly merge into an existing bin
-      if( _n > _nBins ) {       // Need to merge to shrink things, this can cause reproducibility issue
+/*      // If already full bins, try to instantly merge into an existing bin
+      if( _n >= _nBins && (idx > 0) && (idx < (_n-1))) {       // Need to merge to shrink things, this can cause reproducibility issue
         final int ssx = find_smallest();
-        double dssx = compute_delta_error(_ths[ssx+1],k(ssx+1),_ths[ssx],k(ssx));
+        double dssx = compute_delta_error(_ths[ssx+1],k(ssx+1),_ths[ssx],k(ssx)); // sqe of merge two bins
 
         // See if this point will fold into either the left or right bin
         // immediately.  This is the desired fast-path.
-        double d0 = compute_delta_error(pred,w,_ths[idx  ],k(idx  ));
-        double d1 = compute_delta_error(_ths[idx+1],k(idx+1),pred,w);
-        if( d0 < dssx || d1 < dssx ) {
+        double d0 = _sqe[idx]+compute_delta_error(pred,w,_ths[idx  ],k(idx  ));
+        double d1 = _sqe[idx+1]+compute_delta_error(_ths[idx+1],k(idx+1),pred,w);
+        if( d0 < dssx || d1 < dssx ) {  // merge current pred into either left or right bin of min sqe
           if( d1 < d0 ) idx++; else d0 = d1; // Pick correct bin
           double oldk = k(idx);
           if( act==0 ) _fps[idx]+=w;
           else         _tps[idx]+=w;
           _ths[idx] = _ths[idx] + (pred-_ths[idx])/oldk;
           _sqe[idx] = _sqe[idx] + d0;
-          assert ssx == find_smallest();
-        }
-      } else {  // insert this row
+        //  assert ssx == find_smallest();
+        } else { // merge the two bins and let move onto insert row.  Do not return here
 
-        // Must insert this point as it's own threshold (which is not insertion
-        // point), either because we have too few bins or because we cannot
-        // instantly merge the new point into an existing bin.
-        if (idx == _ssx) _ssx = -1;  // Smallest error becomes one of the splits
-        else if (idx < _ssx) _ssx++; // Smallest error will slide right 1
-
-        // Slide over to do the insert.  Horrible slowness.
-        System.arraycopy(_ths, idx, _ths, idx + 1, _n - idx);
-        System.arraycopy(_sqe, idx, _sqe, idx + 1, _n - idx);
-        System.arraycopy(_tps, idx, _tps, idx + 1, _n - idx);
-        System.arraycopy(_fps, idx, _fps, idx + 1, _n - idx);
-        // Insert into the histogram
-        _ths[idx] = pred;         // New histogram center
-        _sqe[idx] = 0;            // Only 1 point, so no squared error
-        if (act == 0) {
-          _tps[idx] = 0;
-          _fps[idx] = w;
-        } else {
-          _tps[idx] = w;
-          _fps[idx] = 0;
         }
-        _n++;
+      }*/
+
+      // insert this row
+      // Must insert this point as it's own threshold (which is not insertion
+      // point), either because we have too few bins or because we cannot
+      // instantly merge the new point into an existing bin.
+      if (idx == _ssx) _ssx = -1;  // Smallest error becomes one of the splits
+      else if (idx < _ssx) _ssx++; // Smallest error will slide right 1
+
+      // Slide over to do the insert.  Horrible slowness.
+      System.arraycopy(_ths, idx, _ths, idx + 1, _n - idx);
+      System.arraycopy(_sqe, idx, _sqe, idx + 1, _n - idx);
+      System.arraycopy(_tps, idx, _tps, idx + 1, _n - idx);
+      System.arraycopy(_fps, idx, _fps, idx + 1, _n - idx);
+      // Insert into the histogram
+      _ths[idx] = pred;         // New histogram center
+      _sqe[idx] = 0;            // Only 1 point, so no squared error
+      if (act == 0) {
+        _tps[idx] = 0;
+        _fps[idx] = w;
+      } else {
+        _tps[idx] = w;
+        _fps[idx] = 0;
       }
+      _n++;
 
       // Merge duplicate rows in _ths.  May require many merges.  May or may  not cause reproducibility issue
       removeDupsShrink(_nBins, false);
@@ -395,7 +397,7 @@ public class AUC2 extends Iced {
     // centers.  Same problem for sorted data.
     private int find_smallest() {
       if( _ssx == -1 ) return (_ssx = find_smallest_impl());
-      assert _ssx == find_smallest_impl();
+ //     assert _ssx == find_smallest_impl();
       return _ssx;
     }
     private int find_smallest_impl() {
