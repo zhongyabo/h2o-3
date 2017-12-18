@@ -9,6 +9,7 @@ import water.util.fp.Function;
 import water.util.fp.Functions;
 
 import java.util.Arrays;
+
 import static hex.AUC2.ThresholdCriterion.precision;
 import static hex.AUC2.ThresholdCriterion.recall;
 
@@ -242,6 +243,7 @@ public class AUC2 extends Iced {
     final double _sqe[];        // Histogram bins, squared error
     final double _tps[];        // Histogram bins, true  positives
     final double _fps[];        // Histogram bins, false positives
+    final double _sqeEst[];
     // Merging this bin with the next gives the least increase in squared
     // error, or -1 if not known.  Requires a linear scan to find.
     int    _ssx;
@@ -258,6 +260,7 @@ public class AUC2 extends Iced {
       _sqe = new double[_workingNBins<<1]; // Squared error (variance) in this bin
       _tps = new double[_workingNBins<<1]; // True  positives
       _fps = new double[_workingNBins<<1]; // False positives
+      _sqeEst = new double[_workingNBins<<1];
       _ssx = -1;
     }
 
@@ -270,6 +273,7 @@ public class AUC2 extends Iced {
       if( idx >= 0 ) {          // Found already in histogram; merge results
         if( act==0 ) _fps[idx]+=w; else _tps[idx]+=w; // One more count; no change in squared error
         _ssx = -1;              // Blows the known best merge
+        updateSqeEst(idx, _n);  // update sqeEst after changes in _ths, _fpr or _tpr
         return;
       }
       idx = -idx-1;             // Get index to insert at
@@ -308,6 +312,7 @@ public class AUC2 extends Iced {
       System.arraycopy(_sqe, idx, _sqe, idx + 1, _n - idx);
       System.arraycopy(_tps, idx, _tps, idx + 1, _n - idx);
       System.arraycopy(_fps, idx, _fps, idx + 1, _n - idx);
+      System.arraycopy(_sqeEst, idx, _sqeEst, idx + 1, _n - idx);
       // Insert into the histogram
       _ths[idx] = pred;         // New histogram center
       _sqe[idx] = 0;            // Only 1 point, so no squared error
@@ -320,8 +325,20 @@ public class AUC2 extends Iced {
       }
       _n++;
 
+      updateSqeEst(idx, _n);  // update sqeEst after changes in _ths.
       // Merge duplicate rows in _ths.  May require many merges.  May or may  not cause reproducibility issue
-      removeDupsShrink(_nBins, false);
+        removeDupsShrink(_nBins, false);
+    }
+
+    public void updateSqeEst(int idx, int aSize) {
+      if (idx > 0) {
+        int idxM1 = idx-1;
+        _sqeEst[idxM1] = _sqe[idx]+_sqe[idxM1]+compute_delta_error(_ths[idx], k(idx), _ths[idxM1], k(idxM1));
+      }
+      int idxP1 = idx+1;
+      if (idxP1 < aSize)  {
+        _sqeEst[idx] = _sqe[idx]+_sqe[idxP1]+compute_delta_error(_ths[idxP1], k(idxP1), _ths[idx], k(idx));
+      }
     }
 
     // Merge duplicate rows in all 4 arrays.
@@ -348,14 +365,18 @@ public class AUC2 extends Iced {
       //assert bldr.sorted();
       int x=     _n-1;
       int y=bldr._n-1;
+      int totalSize = _n+bldr._n;
       while( x+y+1 >= 0 ) {
         boolean self_is_larger = y < 0 || (x >= 0 && _ths[x] >= bldr._ths[y]);
         AUCBuilder b = self_is_larger ? this : bldr;
         int      idx = self_is_larger ?   x  :   y ;
-        _ths[x+y+1] = b._ths[idx];
-        _sqe[x+y+1] = b._sqe[idx];
-        _tps[x+y+1] = b._tps[idx];
-        _fps[x+y+1] = b._fps[idx];
+        int idxUpdate = x+y+1;
+        _ths[idxUpdate] = b._ths[idx];
+        _sqe[idxUpdate] = b._sqe[idx];
+        _tps[idxUpdate] = b._tps[idx];
+        _fps[idxUpdate] = b._fps[idx];
+        updateSqeEst(idxUpdate, totalSize);
+
         if( self_is_larger ) x--; else y--;
       }
       _n += bldr._n;
@@ -368,7 +389,7 @@ public class AUC2 extends Iced {
     private int mergeOneBin( ) {
       // Too many bins; must merge bins.  Merge into bins with least total
       // squared error.  Horrible slowness linear arraycopy.
-      int ssx = (_ssx > 0)? _ssx : find_smallest(); // Dups() will set _ssx
+      int ssx = (_ssx > 0)? _ssx :find_smallest2();
 
       // Merge two bins.  Classic bins merging by averaging the histogram
       // centers based on counts.
@@ -383,8 +404,10 @@ public class AUC2 extends Iced {
       System.arraycopy(_sqe,ssx+2,_sqe,ssx+1,_n-ssx-2);
       System.arraycopy(_tps,ssx+2,_tps,ssx+1,_n-ssx-2);
       System.arraycopy(_fps,ssx+2,_fps,ssx+1,_n-ssx-2);
+      System.arraycopy(_sqeEst, ssx+2, _sqeEst, ssx+1, _n-ssx-2);
       _n--;
       _ssx = -1;   // reset so that the next mergeOneBin() can start over
+      updateSqeEst(ssx, _n);
       return ssx;
     }
 
@@ -395,12 +418,12 @@ public class AUC2 extends Iced {
     // but this leads to bad errors if the probabilities are sorted.  Also
     // tried the original: merge bins with the least distance between bin
     // centers.  Same problem for sorted data.
-    private int find_smallest() {
+/*    private int find_smallest() {
       if( _ssx == -1 ) return (_ssx = find_smallest_impl());
  //     assert _ssx == find_smallest_impl();
       return _ssx;
-    }
-    private int find_smallest_impl() {
+    }*/
+/*    private int find_smallest_impl() {
       double minSQE = Double.MAX_VALUE;
       int minI = -1;
       int n = _n;
@@ -408,8 +431,21 @@ public class AUC2 extends Iced {
         double derr = compute_delta_error(_ths[i+1],k(i+1),_ths[i],k(i));
         if( derr == 0 ) return i; // Dup; no increase in SQE so return immediately
         double sqe = _sqe[i]+_sqe[i+1]+derr;
+
         if( sqe < minSQE ) {
           minI = i;  minSQE = sqe;
+        }
+      }
+      return minI;
+    }*/
+
+    private int find_smallest2() {
+      double minSQE = Double.MAX_VALUE;
+      int minI = -1;
+      int n = _n;
+      for( int i=0; i<n-1; i++ ) {
+        if( _sqeEst[i] < minSQE ) {
+          minI = i;  minSQE = _sqeEst[i];
         }
       }
       return minI;
