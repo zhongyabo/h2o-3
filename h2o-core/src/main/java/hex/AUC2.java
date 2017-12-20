@@ -281,7 +281,7 @@ public class AUC2 extends Iced {
       // insert this row
       double derr = 1;
       if (idx < _n) // potential to be duplicates
-        derr = compute_delta_error(_ths[idx], pred, 1,1);
+        derr = compute_delta_error(_ths[idx], 1, pred, 1);
 
       if (derr==0) { // duplicates here, no need to increase _n, merged this already.
         if( act==0 ) {  _fps[idx]+=w; }
