@@ -356,7 +356,7 @@ public class AUC2 extends Iced {
         _sqe[idxUpdate] = b._sqe[idx];
         _tps[idxUpdate] = b._tps[idx];
         _fps[idxUpdate] = b._fps[idx];
-        updateSqeEst(idxUpdate, totalSize);
+     //   updateSqeEst(idxUpdate, totalSize);
 
         if( self_is_larger ) x--; else y--;
       }
