@@ -218,8 +218,6 @@ public class AUC2 extends Iced {
   /** @return the error of the default CM */
   public double defaultErr( ) { return _max_idx == -1 ? Double.NaN : (fp(_max_idx)+fn(_max_idx))/(_p+_n); }
 
-
-
   // Compute an online histogram of the predicted probabilities, along with
   // true positive and false positive totals in each histogram bin.
   private static class AUC_Impl extends MRTask<AUC_Impl> {
@@ -278,7 +276,6 @@ public class AUC2 extends Iced {
       }
       idx = -idx-1;             // Get index to insert at
 
-
         // Must insert this point as it's own threshold (which is not insertion
         // point), either because we have too few bins or because we cannot
         // instantly merge the new point into an existing bin.
@@ -303,10 +300,8 @@ public class AUC2 extends Iced {
         }
         _n++;
 
-
       updateSqeEst(idx, _n);  // update sqeEst after changes in _ths.
-      // Merge duplicate rows in _ths.  May require many merges.  May or may  not cause reproducibility issue
-      removeDupsShrink(_nBins, false);
+      removeDupsShrink(_nBins, false);  // keep this as is.  Do not try to simplify
     }
 
     public void updateSqeEst(int idx, int aSize) {
@@ -356,7 +351,6 @@ public class AUC2 extends Iced {
         _sqe[idxUpdate] = b._sqe[idx];
         _tps[idxUpdate] = b._tps[idx];
         _fps[idxUpdate] = b._fps[idx];
-     //   updateSqeEst(idxUpdate, totalSize);
 
         if( self_is_larger ) x--; else y--;
       }
@@ -377,7 +371,6 @@ public class AUC2 extends Iced {
         }
          updateSqeEst(idx-1, idx); // update the _sqeEst
       }
-
       updateSqeEst(idx, _n);  // update the last one
       _n = idx+1; // actual number of elements
 
@@ -389,7 +382,7 @@ public class AUC2 extends Iced {
       // Too many bins; must merge bins.  Merge into bins with least total
       // squared error.  Horrible slowness linear arraycopy.
       int ssx = (_ssx > 0)? _ssx : find_smallest();
-    //  int ssx = find_smallest();
+
       // Merge two bins.  Classic bins merging by averaging the histogram
       // centers based on counts.
       double k0 = k(ssx);
@@ -434,7 +427,6 @@ public class AUC2 extends Iced {
       return ((float)ths1-(float)ths0)==0;
     }
 
-
     private double compute_delta_error( double ths1, double n1, double ths0, double n0 ) {
       // If thresholds vary by less than a float ULP, treat them as the same.
       // Some models only output predictions to within float accuracy (so a
@@ -447,18 +439,7 @@ public class AUC2 extends Iced {
     }
 
     private double k( int idx ) { return _tps[idx]+_fps[idx]; }
-
-    //private boolean sorted() {
-    //  double t = _ths[0];
-    //  for( int i=1; i<_n; i++ ) {
-    //    if( _ths[i] < t )
-    //      return false;
-    //    t = _ths[i];
-    //  }
-    //  return true;
-    //}
   }
-
 
   // ==========
   // Given the probabilities of a 1, and the actuals (0/1) report the perfect
