@@ -2,6 +2,7 @@ package hex.glm;
 
 import hex.FrameSplitter;
 import hex.ModelMetricsBinomialGLM.ModelMetricsMultinomialGLM;
+import hex.ModelMetricsBinomialGLM.ModelMetricsOrdinalGLM;
 import hex.deeplearning.DeepLearningModel;
 import hex.glm.GLMModel.GLMParameters;
 import hex.glm.GLMModel.GLMParameters.Family;
@@ -23,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Created by tomasnykodym on 10/28/15.
  */
-public class GLMBasicTestMultinomial extends TestUtil {
+public class GLMBasicTestOrdinal extends TestUtil {
   static Frame _covtype;
   static Frame _train;
   static Frame _test;
@@ -48,61 +49,8 @@ public class GLMBasicTestMultinomial extends TestUtil {
 
 
   @Test
-  public void testCovtypeNoIntercept(){
-    GLMParameters params = new GLMParameters(Family.multinomial);
-    GLMModel model = null;
-    Frame preds = null;
-    Vec weights = _covtype.anyVec().makeCon(1);
-    Key k = Key.<Frame>make("cov_with_weights");
-    Frame f = new Frame(k,_covtype.names(),_covtype.vecs());
-    f.add("weights",weights);
-    DKV.put(f);
-    try {
-      params._response_column = "C55";
-      params._train = k;
-      params._valid = _covtype._key;
-      params._objective_epsilon = 1e-6;
-      params._beta_epsilon = 1e-4;
-      params._weights_column = "weights";
-      params._missing_values_handling = DeepLearningModel.DeepLearningParameters.MissingValuesHandling.Skip;
-      params._intercept = false;
-      double[] alpha = new double[]{0,.5,.1};
-      Solver s = Solver.L_BFGS;
-      System.out.println("solver = " + s);
-      params._solver = s;
-      params._max_iterations = 5000;
-      for (int i = 0; i < alpha.length; ++i) {
-        params._alpha = new double[]{alpha[i]};
-//        params._lambda[0] = lambda[i];
-        model = new GLM(params).trainModel().get();
-        System.out.println(model.coefficients());
-//        Assert.assertEquals(0,model.coefficients().get("Intercept"),0);
-        double [][] bs = model._output.getNormBetaMultinomial();
-        for(double [] b:bs)
-          Assert.assertEquals(0,b[b.length-1],0);
-        System.out.println(model._output._model_summary);
-        System.out.println(model._output._training_metrics);
-        System.out.println(model._output._validation_metrics);
-        preds = model.score(_covtype);
-        ModelMetricsMultinomialGLM mmTrain = (ModelMetricsMultinomialGLM) hex.ModelMetricsMultinomial.getFromDKV(model, _covtype);
-        assertTrue(model._output._training_metrics.equals(mmTrain));
-        model.delete();
-        model = null;
-        preds.delete();
-        preds = null;
-      }
-    } finally{
-      weights.remove();
-      DKV.remove(k);
-      if(model != null)model.delete();
-      if(preds != null)preds.delete();
-    }
-  }
-
-
-  @Test
   public void testCovtypeBasic(){
-    GLMParameters params = new GLMParameters(Family.multinomial);
+    GLMParameters params = new GLMParameters(Family.ordinal);
     GLMModel model = null;
     Frame preds = null;
     Vec weights = _covtype.anyVec().makeCon(1);
@@ -123,7 +71,7 @@ public class GLMBasicTestMultinomial extends TestUtil {
       double[] alpha = new double[]{1};
       double[] expected_deviance = new double[]{25499.76};
       double[] lambda = new double[]{2.544750e-05};
-      for (Solver s : new Solver[]{Solver.COORDINATE_DESCENT, Solver.IRLSM, Solver.L_BFGS}) {
+      for (Solver s : new Solver[]{Solver.COORDINATE_DESCENT}) {  // ordinal regression only support CD
         System.out.println("solver = " + s);
         params._solver = s;
         params._max_iterations = params._solver == Solver.L_BFGS?300:10;
@@ -135,11 +83,10 @@ public class GLMBasicTestMultinomial extends TestUtil {
           System.out.println(model._output._training_metrics);
           System.out.println(model._output._validation_metrics);
           assertTrue(model._output._training_metrics.equals(model._output._validation_metrics));
-          assertTrue(((ModelMetricsMultinomialGLM) model._output._training_metrics)._resDev <= expected_deviance[i] * 1.1);
+        //  assertTrue(((ModelMetricsOrdinalGLM) model._output._training_metrics)._resDev <= expected_deviance[i] * 1.1);
           preds = model.score(_covtype);
-          // add mojo pojo comparison
-          Assert.assertTrue(model.testJavaScoring(f, preds, 1e-5));
-          ModelMetricsMultinomialGLM mmTrain = (ModelMetricsMultinomialGLM) hex.ModelMetricsMultinomial.getFromDKV(model, _covtype);
+          Assert.assertTrue(model.testJavaScoring(f, preds, 1e-6));
+          ModelMetricsOrdinalGLM mmTrain = (ModelMetricsOrdinalGLM) hex.ModelMetricsOrdinal.getFromDKV(model, _covtype);
           assertTrue(model._output._training_metrics.equals(mmTrain));
           model.delete();
           model = null;
