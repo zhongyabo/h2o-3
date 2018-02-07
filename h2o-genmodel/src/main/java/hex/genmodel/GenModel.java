@@ -534,7 +534,7 @@ public abstract class GenModel implements IGenModel, IGeneratedModel, Serializab
   public static double GLM_logitInv( double x ) { return 1.0 / (Math.exp(-x) + 1.0); }
   public static double GLM_logInv( double x ) { return Math.exp(x); }
   public static double GLM_inverseInv( double x ) {  double xx = (x < 0) ? Math.min(-1e-5, x) : Math.max(1e-5, x); return 1.0 / xx; }
-  public static double GLM_ordinalInv(double x) {
+  public static double GLM_ologitInv(double x) {
     double eta = Math.exp(x);
     return eta/(1+eta);
   }
