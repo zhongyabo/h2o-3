@@ -23,6 +23,7 @@ from h2o.utils.shared_utils import temp_ctr
 from h2o.model.binomial import H2OBinomialModel
 from h2o.model.clustering import H2OClusteringModel
 from h2o.model.multinomial import H2OMultinomialModel
+from h2o.model.ordinal import H2OOrdinalModel
 from h2o.model.regression import H2ORegressionModel
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
 from h2o.estimators.deeplearning import H2ODeepLearningEstimator
@@ -82,7 +83,7 @@ def check_models(model1, model2, use_cross_validation=False, op='e'):
                                             "{1}. Expected the first to be > than the second.".format(mse1, mse2)
         elif op == 'ge': assert mse1 >= mse2, "The first model has an MSE of {0} and the second model has an MSE of " \
                                               "{1}. Expected the first to be >= than the second.".format(mse1, mse2)
-    elif isinstance(model1,H2OMultinomialModel): #   2c. Multinomial
+    elif isinstance(model1,H2OMultinomialModel) or isinstance(model1,H2OOrdinalModel): #   2c. Multinomial
         # hit-ratio
         pass
     elif isinstance(model1,H2OClusteringModel): #   2d. Clustering

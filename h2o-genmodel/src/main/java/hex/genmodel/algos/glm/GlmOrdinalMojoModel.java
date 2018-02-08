@@ -53,13 +53,14 @@ public class GlmOrdinalMojoModel extends GlmMojoModelBase {
     double nextProb = 0;
 
     preds[1] = currProb;  // 0th class
-    for (int c = 1; c < preds.length; ++c) { // go class 1 to NC-2
-      expEta = Math.exp(preds[c+1]);
+    int finalClass = _nclasses-1;
+    for (int c = 2; c < _nclasses; ++c) { // go class 1 to NC-2
+      expEta = Math.exp(preds[c]);
       nextProb = expEta/(1+expEta);
-      preds[c+1] = nextProb-currProb;
+      preds[c] = nextProb-currProb;
       currProb = nextProb;
     }
-    preds[preds.length] = 1-nextProb;  // set the value to the last class
+    preds[_nclasses] = 1-currProb;  // set the value to the last class
     preds[0] = ArrayUtils.maxIndex(preds)-1;
     return preds;
   }

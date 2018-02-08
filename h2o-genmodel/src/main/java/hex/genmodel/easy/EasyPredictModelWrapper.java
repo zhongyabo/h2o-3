@@ -489,6 +489,19 @@ public class EasyPredictModelWrapper implements java.io.Serializable {
   }
 
   /**
+   * A helper function to return an array of multinomial class probabilities for a prediction in sorted order.
+   * The returned array has the most probable class in position 0.
+   *
+   * @param p The prediction.
+   * @return An array with sorted class probabilities.
+   */
+  public SortedClassProbability[] sortByDescendingClassProbability(OrdinalModelPrediction p) {
+    String[] domainValues = m.getDomainValues(m.getResponseIdx());
+    double[] classProbabilities = p.classProbabilities;
+    return sortByDescendingClassProbability(domainValues, classProbabilities);
+  }
+
+  /**
    * Make a prediction on a new data point using a Clustering model.
    *
    * @param data A new data point.

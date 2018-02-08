@@ -829,7 +829,9 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         res[i] = _global_beta[i]/_zvalues[i];
       return res;
     }
-
+    @Override public ModelCategory getModelCategory() {
+      return _binomial?ModelCategory.Binomial:(_multinomial?ModelCategory.Multinomial:(_ordinal?ModelCategory.Ordinal:ModelCategory.Regression));
+    }
     @Override
     protected long checksum_impl() {
       long d = _global_beta == null?1:Arrays.hashCode(_global_beta);
@@ -932,7 +934,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
       _coefficient_names[_coefficient_names.length-1] = "Intercept";
       _binomial = (glm._parms._family == Family.binomial || glm._parms._family == Family.quasibinomial);
       _nclasses = glm.nclasses();
-      _multinomial = _nclasses > 2;
+      _multinomial = glm._parms._family == Family.multinomial;
       _ordinal = (glm._parms._family == Family.ordinal);
 
     }

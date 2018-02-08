@@ -90,7 +90,7 @@ public class GLMScore extends MRTask<GLMScore> {
         if (currProb >= 1)  // max out all probability already
           break;
       }
-      preds[bm.length] = 1-nextProb;  // set the value to the last class
+      preds[bm.length] = 1-currProb;  // set the value to the last class
       preds[0] = ArrayUtils.maxIndex(preds)-1;
     } else if (_m._parms._family == GLMModel.GLMParameters.Family.multinomial) {
       double[] eta = _eta;
