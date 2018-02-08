@@ -11,7 +11,7 @@ source("../../scripts/h2o-r-test-setup.R")
 # randomly.  We hope to test all different network settings here.
 #----------------------------------------------------------------------
 
-test.deeplearning.mojo <-
+test.ordinalGlm.mojo <-
   function() {
     #----------------------------------------------------------------------
     # Run the test
@@ -74,7 +74,7 @@ mojoH2Opredict<-function(model, tmpdir_name, filename) {
 }
 
 buildModelSaveMojo <- function(params) {
-  model <- do.call("h2o.deeplearning", params)
+  model <- do.call("h2o.glm", params)
   model_key <- model@model_id
   tmpdir_name <- sprintf("%s/tmp_model_%s", sandbox(), as.character(Sys.getpid()))
   h2o.saveMojo(model, path = tmpdir_name, force = TRUE) # save mojo
@@ -87,24 +87,10 @@ setParmsData <- function(numTest=1000) {
   #----------------------------------------------------------------------
   # Parameters for the test.
   #----------------------------------------------------------------------
-  allAct <- c("Tanh", "TanhWithDropout", "Rectifier", "RectifierWithDropout")
-  problemType <- c("binomial", "multinomial", "regression")
   missingValues <- c('Skip', 'MeanImputation')
-  allFactors <- c(TRUE, FALSE)
-  categoricalEncodings <- c("AUTO", "OneHotInternal", "Binary", "Eigen")
-  enableAutoEncoder <- allFactors[sample(1:length(allFactors), replace = F)[1]]
-
-  if (!enableAutoEncoder) # autoEncoder cannot use maxout
-    allAct <- c(allAct, "Maxout", "MaxoutWithDropout")
-  
-  problem <- problemType[sample(1:length(problemType), replace = F)[1]]
-  actFunc <- allAct[sample(1:length(allAct), replace = F)[1]]
   missing_values <- missingValues[sample(1:length(missingValues), replace = F)[1]]
-  cateEn <-categoricalEncodings[sample(1:length(categoricalEncodings), replace = F)[1]]
-  toStandardize <- allFactors[sample(1:length(allFactors), replace = F)[1]]
-  useAllFactors <- allFactors[sample(1:length(allFactors), replace = F)[1]]
   
-  training_file <- random_dataset(problem, testrow = numTest)
+  training_file <- random_dataset("multinomial", testrow = numTest)
   ratios <- (h2o.nrow(training_file)-numTest)/h2o.nrow(training_file)
   allFrames <- h2o.splitFrame(training_file, ratios)
   training_frame <- allFrames[[1]]
@@ -113,23 +99,12 @@ setParmsData <- function(numTest=1000) {
   
   nn_structure <- random_NN(actFunc, 6, 10)
   params                  <- list()
-  params$use_all_factor_levels <- useAllFactors
-  params$activation <- actFunc
-  params$standardize <- toStandardize
   params$missing_values_handling <- missing_values
-  params$categorical_encoding <- cateEn
-  params$hidden <- nn_structure$hidden
   params$training_frame <- training_frame
   params$x <- allNames[-which(allNames=="response")]
-  params$autoencoder <- enableAutoEncoder
-  if (!params$autoencoder)
-    params$y <- "response"
-  
-  if (length(nn_structure$hiddenDropouts) > 0) {
-    params$input_dropout_ratio <- runif(1, 0, 0.1)
-    params$hidden_dropout_ratios <- nn_structure$hiddenDropouts
-  }
+  params$family <- "ordinal"
+
   return(list("params" = params, "tDataset" = test_frame))
 }
 
-doTest("Deeplearning mojo test", test.deeplearning.mojo)
+doTest("Ordinal GLM mojo test", test.ordinalGlm.mojo)

@@ -42,7 +42,8 @@ def glm_ordinal_mojo_pojo():
 
 def set_params():
     global PROBLEM
-    missingValues = ['Skip', 'MeanImputation']
+    #missingValues = ['Skip', 'MeanImputation']
+    missingValues = ['MeanImputation']
     PROBLEM = "multinomial"
     print("PROBLEM is {0}".format(PROBLEM))
     missing_values = missingValues[randint(0, len(missingValues)-1)]
