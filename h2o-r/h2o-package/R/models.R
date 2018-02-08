@@ -1035,7 +1035,7 @@ h2o.giniCoef <- function(object, train=FALSE, valid=FALSE, xval=FALSE) {
 h2o.coef <- function(object) {
   if (is(object, "H2OModel")) {
     if (is.null(object@model$coefficients_table)) stop("Can only extract coefficeints from GLMs")
-    if (object@allparameters$family != "multinomial" || object@allparameters$family != "ordinal") {
+    if (object@allparameters$family != "multinomial" && object@allparameters$family != "ordinal") {
       coefs <- object@model$coefficients_table$coefficients
       names(coefs) <- object@model$coefficients_table$names
     } else {
@@ -1055,7 +1055,7 @@ h2o.coef <- function(object) {
 h2o.coef_norm <- function(object) {
   if (is(object, "H2OModel")) {
     if (is.null(object@model$coefficients_table)) stop("Can only extract coefficeints from GLMs")
-    if (object@parameters$family != "multinomial"  || object@parameters$family != "ordinal") {
+    if (object@parameters$family != "multinomial"  && object@parameters$family != "ordinal") {
       coefs <- object@model$coefficients_table$standardized_coefficients
       names(coefs) <- object@model$coefficients_table$names
     } else {
@@ -2947,6 +2947,7 @@ h2o.cross_validation_predictions <- function(object) {
 h2o.partialPlot <- function(object, data, cols, destination_key, nbins=20, plot = TRUE, plot_stddev = TRUE) {
   if(!is(object, "H2OModel")) stop("object must be an H2Omodel")
   if( is(object, "H2OMultinomialModel")) stop("object must be a regression model or binary classfier")
+  if( is(object, "H2OOrdinalModel")) stop("object must be a regression model or binary classfier")
   if(!is(data, "H2OFrame")) stop("data must be H2OFrame")
   if(!is.numeric(nbins) | !(nbins > 0) ) stop("nbins must be a positive numeric")
   if(!is.logical(plot)) stop("plot must be a logical value")

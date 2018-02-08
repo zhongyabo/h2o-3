@@ -1118,6 +1118,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
     if(_parms._family == Family.multinomial || _parms._family == Family.ordinal) {
       if (o != 0) throw H2O.unimpl("Offset is not implemented for multinomial/ordinal.");
       double[] eta = _eta.get();
+      Arrays.fill(preds, 0.0);
       if (eta == null || eta.length < _output.nclasses()) _eta.set(eta = MemoryManager.malloc8d(_output.nclasses()));
       final double[][] bm = _output._global_beta_multinomial;
       double sumExp = 0;
@@ -1148,7 +1149,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
           preds[c + 1] = eta[c] * sumExp;
         preds[0] = ArrayUtils.maxIndex(eta);
       } else {  // scoring for ordinal
-        int lastClass  = bm.length-1;
+        int lastClass  = bm.length-1; // bm is parameters nclass by numPred+1
         double expEta = Math.exp(eta[0]);
         double currProb = expEta/(1+expEta);
         double nextProb = 0;
@@ -1208,7 +1209,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
       body.ip("for(int i = 0; i < " + _output._dinfo._cats + "; ++i) if(Double.isNaN(data[i])) data[i] = CAT_MODES.VALUES[i];").nl();
       body.ip("for(int i = 0; i < " + _output._dinfo._nums + "; ++i) if(Double.isNaN(data[i + " + _output._dinfo._cats + "])) data[i+" + _output._dinfo._cats + "] = NUM_MEANS.VALUES[i];").nl();
     }
-    if(_parms._family != Family.multinomial || _parms._family != Family.ordinal) {
+    if(_parms._family != Family.multinomial && _parms._family != Family.ordinal) {
       body.ip("double eta = 0.0;").nl();
       if (!_parms._use_all_factor_levels) { // skip level 0 of all factors
         body.ip("for(int i = 0; i < CATOFFS.length-1; ++i) if(data[i] != 0) {").nl();
@@ -1270,13 +1271,30 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
       body.ip("    preds[c+1] += b[" + noff + "+i + c*" + P + "]*data[i];").nl();
       body.ip("  preds[c+1] += b[" + (P-1) +" + c*" + P + "]; // reduce intercept").nl();
       body.ip("}").nl();
-      body.ip("double max_row = 0;").nl();
-      body.ip("for(int c = 1; c < preds.length; ++c) if(preds[c] > max_row) max_row = preds[c];").nl();
-      body.ip("double sum_exp = 0;").nl();
-      body.ip("for(int c = 1; c < preds.length; ++c) { sum_exp += (preds[c] = Math.exp(preds[c]-max_row));}").nl();
-      body.ip("sum_exp = 1/sum_exp;").nl();
-      body.ip("double max_p = 0;").nl();
-      body.ip("for(int c = 1; c < preds.length; ++c) if((preds[c] *= sum_exp) > max_p){ max_p = preds[c]; preds[0] = c-1;};").nl();
+
+      if (_parms._family == Family.multinomial) {
+        body.ip("double max_row = 0;").nl();
+        body.ip("for(int c = 1; c < preds.length; ++c) if(preds[c] > max_row) max_row = preds[c];").nl();
+        body.ip("double sum_exp = 0;").nl();
+        body.ip("for(int c = 1; c < preds.length; ++c) { sum_exp += (preds[c] = Math.exp(preds[c]-max_row));}").nl();
+        body.ip("sum_exp = 1/sum_exp;").nl();
+        body.ip("double max_p = 0;").nl();
+        body.ip("for(int c = 1; c < preds.length; ++c) if((preds[c] *= sum_exp) > max_p){ max_p = preds[c]; preds[0] = c-1;};").nl();
+      } else {  // special for ordinal
+        body.ip("double expEta = Math.exp(preds[1]);").nl();
+        body.ip("double currProb = expEta/(1+expEta);").nl();
+        body.ip("double nextProb = 0;").nl();
+        body.ip("preds[1] = currProb;  // 0th class").nl();
+        body.ip("int nclasses = preds.length-1;").nl();
+        body.ip("  for (int c = 2; c < nclasses; ++c) { // go class 1 to NC-2").nl();
+        body.ip("  expEta = Math.exp(preds[c]);").nl();
+        body.ip("  nextProb = expEta/(1+expEta);").nl();
+        body.ip("  preds[c] = nextProb-currProb;").nl();
+        body.ip("  currProb = nextProb;").nl();
+        body.ip("}").nl();
+        body.ip("preds[nclasses] = 1-currProb;  // set the value to the last class").nl();
+        body.ip("preds[0] = hex.genmodel.utils.ArrayUtils.maxIndex(preds)-1;").nl();
+      }
     }
   }
 

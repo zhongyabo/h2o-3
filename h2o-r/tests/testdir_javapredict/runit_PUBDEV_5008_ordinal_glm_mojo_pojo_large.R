@@ -18,6 +18,7 @@ test.ordinalGlm.mojo <-
     #----------------------------------------------------------------------
     e <- tryCatch({
       numTest = 200 # set test dataset to contain 1000 rows
+      browser()
       params_prob_data <- setParmsData(numTest) # generate model parameters, random dataset
       
       modelAndDir<-buildModelSaveMojo(params_prob_data$params) # build the model and save mojo
@@ -87,7 +88,7 @@ setParmsData <- function(numTest=1000) {
   #----------------------------------------------------------------------
   # Parameters for the test.
   #----------------------------------------------------------------------
-  missingValues <- c('Skip', 'MeanImputation')
+  missingValues <- c('MeanImputation')
   missing_values <- missingValues[sample(1:length(missingValues), replace = F)[1]]
   
   training_file <- random_dataset("multinomial", testrow = numTest)
@@ -97,11 +98,11 @@ setParmsData <- function(numTest=1000) {
   test_frame <- allFrames[[2]]
   allNames = h2o.names(training_frame)
   
-  nn_structure <- random_NN(actFunc, 6, 10)
   params                  <- list()
   params$missing_values_handling <- missing_values
   params$training_frame <- training_frame
   params$x <- allNames[-which(allNames=="response")]
+  params$y <- "response"
   params$family <- "ordinal"
 
   return(list("params" = params, "tDataset" = test_frame))
