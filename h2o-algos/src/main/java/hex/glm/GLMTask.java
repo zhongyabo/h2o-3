@@ -101,12 +101,17 @@ public abstract class GLMTask  {
     final double [][] _beta;
     double _likelihood;
     final int _nclasses;
+    final int _lastClass;
+    final int _secondToLast;
     long _nobs;
 
     public GLMResDevTaskOrdinal(Key jobKey, DataInfo dinfo, double [] beta, int nclasses) {
       super(null,dinfo, jobKey);
       _beta = ArrayUtils.convertTo2DMatrix(beta,beta.length/nclasses);
       _nclasses = nclasses;
+      _lastClass = nclasses-1;
+      _secondToLast = _lastClass - 1;
+
     }
 
     @Override public boolean handlesSparseData(){return true;}
@@ -122,11 +127,18 @@ public abstract class GLMTask  {
     @Override
     protected void processRow(Row r) {
       _nobs++;
-      double sumExp = 0;
-      for(int c = 0; c < _nclasses; ++c)
-        sumExp += Math.exp(r.innerProduct(_beta[c]) + _sparseOffsets[c]);
       int c = (int)r.response(0);
-      _likelihood -= r.weight * ((r.innerProduct(_beta[c]) + _sparseOffsets[c]) - Math.log(sumExp));
+
+      if (c==0) {
+        double eta = r.innerProduct(_beta[0])+ _sparseOffsets[c];
+        _likelihood -= r.weight * (eta-Math.log(1+Math.exp(eta)));
+      } else if (c==_lastClass) {
+        _likelihood += r.weight * Math.log(1+Math.exp(r.innerProduct(_beta[_secondToLast])+ _sparseOffsets[c]));
+      } else {
+        double eta = Math.exp(r.innerProduct(_beta[c])+_sparseOffsets[c]);
+        double etaM1 = Math.exp(r.innerProduct(_beta[c])+_sparseOffsets[c-1]);
+        _likelihood -= r.weight * Math.log(eta/(1+eta)-etaM1/(1+etaM1));
+      }
     }
     @Override public void reduce(GLMResDevTaskOrdinal gt) {_nobs += gt._nobs; _likelihood += gt._likelihood;}
 
