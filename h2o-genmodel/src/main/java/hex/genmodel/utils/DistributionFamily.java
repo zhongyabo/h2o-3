@@ -27,9 +27,11 @@ public enum DistributionFamily {
     @Override public double linkInv(double f) { return exp(f); }
     @Override public String linkInvString(String f) { return expString(f); }
   },
-  ordinal { // todo: correct this implementation
-    @Override public double link(double f) { return log(f); }
-    @Override public double linkInv(double f) { return exp(f); }
+  ordinal { // only for logit though.  Need to figure out how to add probit and loglog
+    @Override public double link(double f) { return log(f/(1-f)); }
+    @Override public double linkInv(double f) {
+      double eta = exp(f);
+      return eta/(1+eta); }
     @Override public String linkInvString(String f) { return expString(f); }
   },
   gaussian {

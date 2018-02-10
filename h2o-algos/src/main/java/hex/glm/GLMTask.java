@@ -127,14 +127,13 @@ public abstract class GLMTask  {
     @Override
     protected void processRow(Row r) {
       _nobs++;
-      int c = (int)r.response(0);
-
-      if (c==0) {
+      int c = (int)r.response(0); // true response category
+      if (c==0) { // for category 0
         double eta = r.innerProduct(_beta[0])+ _sparseOffsets[c];
         _likelihood -= r.weight * (eta-Math.log(1+Math.exp(eta)));
-      } else if (c==_lastClass) {
+      } else if (c==_lastClass) { // for class nclass-1
         _likelihood += r.weight * Math.log(1+Math.exp(r.innerProduct(_beta[_secondToLast])+ _sparseOffsets[c]));
-      } else {
+      } else { // for category from 1 to nclass-2
         double eta = Math.exp(r.innerProduct(_beta[c])+_sparseOffsets[c]);
         double etaM1 = Math.exp(r.innerProduct(_beta[c])+_sparseOffsets[c-1]);
         _likelihood -= r.weight * Math.log(eta/(1+eta)-etaM1/(1+etaM1));
