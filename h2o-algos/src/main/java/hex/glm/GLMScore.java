@@ -77,13 +77,13 @@ public class GLMScore extends MRTask<GLMScore> {
       final double[][] bm = _beta_multinomial;
       Arrays.fill(preds,0); // zero out preds
       int lastClass  = bm.length-1;
-      double expEta = Math.exp(r.innerProduct(bm[0]));
+      double expEta = Math.exp(r.innerProduct(bm[0])+o);
       double currProb = expEta/(1+expEta);
       double nextProb = 0;
 
       preds[1] = currProb;
       for (int c = 1; c < lastClass; ++c) { // go class 1 to NC-2
-        expEta = Math.exp(r.innerProduct(bm[c]));
+        expEta = Math.exp(r.innerProduct(bm[c])+o);
         nextProb = expEta/(1+expEta);
         preds[c+1] = nextProb-currProb;
         currProb = nextProb;

@@ -396,6 +396,10 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
             error("_link", "Ordinal regression only supports ologit as link.");
           warn("_solver", "Ordinal regression only works with gradient descent at " +
                     "this point.  Do not choose a solver and leave it as default.");
+          if (_parms._link == Link.ologit && _nclass == 2) {
+            error("_binomial", "Ordinal regression with 2 classes and link ologit should use the" +
+                    " binomial family and logit as its link.");
+          }
           break;
         case gaussian:
 //          if (_nclass != 1) error("_family", H2O.technote(2, "Gaussian requires the response to be numeric."));

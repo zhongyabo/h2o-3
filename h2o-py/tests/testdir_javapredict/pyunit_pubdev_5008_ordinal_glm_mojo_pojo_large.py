@@ -18,13 +18,16 @@ PROBLEM="multinomial"
 def glm_ordinal_mojo_pojo():
     h2o.remove_all()
     params = set_params()   # set deeplearning model parameters
-    df = random_dataset(PROBLEM)       # generate random dataset
-    train = df[NTESTROWS:, :]
-    test = df[:NTESTROWS, :]
-    x = list(set(df.names) - {"response"})
+    #df = random_dataset(PROBLEM)       # generate random dataset
+    df = h2o.import_file(pyunit_utils.locate("bigdata/laptop/glm_ordinal_logit/ordinal_multinomial_training_set.csv"))
+    df['C26'] = df['C26'].asfactor()
+    respName = "C26"
+    train = df
+    test = df
+    x = list(set(df.names) - {u'C26'})
 
     try:
-        glmOrdinalModel = build_save_model(params, x, train) # build and save mojo model
+        glmOrdinalModel = build_save_model(params, x, train, respName) # build and save mojo model
         h2o.download_csv(test[x], os.path.join(TMPDIR, 'in.csv'))  # save test file, h2o predict/mojo use same file
         pred_h2o, pred_mojo = pyunit_utils.mojo_predict(glmOrdinalModel, TMPDIR, MOJONAME)  # load model and perform predict
         h2o.download_csv(pred_h2o, os.path.join(TMPDIR, "h2oPred.csv"))
@@ -52,12 +55,12 @@ def set_params():
     print(params)
     return params
 
-def build_save_model(params, x, train):
+def build_save_model(params, x, train, respName):
     global TMPDIR
     global MOJONAME
     # build a model
     model = H2OGeneralizedLinearEstimator(**params)
-    model.train(x=x, y="response", training_frame=train)
+    model.train(x=x, y=respName, training_frame=train)
     # save model
     regex = re.compile("[+\\-* !@#$%^&()={}\\[\\]|;:'\"<>,.?/]")
     MOJONAME = regex.sub("_", model._id)

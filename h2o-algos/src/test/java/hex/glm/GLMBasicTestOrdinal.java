@@ -1,10 +1,7 @@
 package hex.glm;
 
 import hex.DataInfo;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import water.DKV;
 import water.MemoryManager;
 import water.Scope;
@@ -69,7 +66,7 @@ public class GLMBasicTestOrdinal extends TestUtil {
 
   // test and make sure the h2opredict, pojo and mojo predict agrees with multinomial dataset that includes
   // both enum and numerical datasets
-  @Test
+  @Ignore
   public void testOrdinalPredMojoPojo() {
     Scope.enter();
     GLMModel.GLMParameters paramsO = new GLMModel.GLMParameters(GLMModel.GLMParameters.Family.ordinal,
@@ -81,7 +78,7 @@ public class GLMBasicTestOrdinal extends TestUtil {
     paramsO._alpha = new double[]{0.001};  // l1pen
     paramsO._objective_epsilon = 1e-6;
     paramsO._beta_epsilon = 1e-4;
-    paramsO._standardize = false;
+    paramsO._standardize = true;
 
     GLMModel model = new GLM(paramsO).trainModel().get();
     Scope.track_generic(model);
