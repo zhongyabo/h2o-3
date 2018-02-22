@@ -681,7 +681,6 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
         // perform updates only on the betas excluding the intercept
         double[] grads = _state._ginfo._gradient;
         // update all parameters with new gradient;
-        BetaConstraint bc = _state.activeBC();
         for (int pindex=0; pindex<predSize; pindex++) { // add l1pen is necessary and coefficient updates
           betaCnd[pindex] = l1pen==0?grads[pindex]:(grads[pindex]+beta[pindex]>0?l1pen:(beta[pindex]==0?0:-l1pen));
           beta[pindex] -= betaCnd[pindex]; // take the negative of the gradient and stuff

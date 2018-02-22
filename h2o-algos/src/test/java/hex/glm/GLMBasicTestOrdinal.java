@@ -1,7 +1,6 @@
 package hex.glm;
 
 import hex.DataInfo;
-import hex.optimization.ADMM;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -97,7 +96,8 @@ public class GLMBasicTestOrdinal extends TestUtil {
   // alternate calculation without the distributed framework.  The datasets contains only numerical columns.
   @Test
   public void testOrdinalMultinomial() { int nclasses = _trainMultinomial.vec(25).domain().length;  // number of response classes
-    int iterNum = rand.nextInt(10)+2;   // number of iterations to test
+  //  int iterNum = rand.nextInt(10)+2;   // number of iterations to test
+    int iterNum=2;
     Scope.enter();
     GLMModel.GLMParameters paramsO = new GLMModel.GLMParameters(GLMModel.GLMParameters.Family.ordinal,
             GLMModel.GLMParameters.Family.ordinal.defaultLink, new double[]{0}, new double[]{0}, 0, 0);
@@ -105,8 +105,8 @@ public class GLMBasicTestOrdinal extends TestUtil {
     paramsO._train = _trainMultinomial._key;
     paramsO._lambda_search = false;
     paramsO._response_column = "C26";
-    paramsO._lambda = new double[]{1e-4};  // no regularization here
-    paramsO._alpha = new double[]{0.5};  // l1pen
+    paramsO._lambda = new double[]{0};  // no regularization here
+    paramsO._alpha = new double[]{0};  // l1pen
     paramsO._objective_epsilon = 1e-6;
     paramsO._beta_epsilon = 1e-4;
     paramsO._max_iterations = iterNum;
@@ -202,7 +202,7 @@ public class GLMBasicTestOrdinal extends TestUtil {
     for (int npredInd = 0; npredInd < npred; npredInd++) {
       betaGrad[npredInd] *= reg;
       betaGrad[npredInd] += l2pen*beta[npredInd]; // add L2pen
-      betaGrad[npredInd] += ADMM.shrinkage(beta[npredInd], l1pen);
+      betaGrad[npredInd] += l1pen==0.0?0:(beta[npredInd] > 0?l1pen:-l1pen);
       beta[npredInd] -= betaGrad[npredInd];
     }
 

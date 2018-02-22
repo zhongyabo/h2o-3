@@ -48,7 +48,7 @@ def set_params():
     print("PROBLEM is {0}".format(PROBLEM))
     missing_values = missingValues[randint(0, len(missingValues)-1)]
 
-    params = {'missing_values_handling': missing_values, 'solver': "COORDINATE_DESCENT", 'family':"ordinal"}
+    params = {'missing_values_handling': missing_values, 'family':"ordinal"}
     print(params)
     return params
 
