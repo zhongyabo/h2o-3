@@ -96,8 +96,7 @@ public class GLMBasicTestOrdinal extends TestUtil {
   // alternate calculation without the distributed framework.  The datasets contains only numerical columns.
   @Test
   public void testOrdinalMultinomial() { int nclasses = _trainMultinomial.vec(25).domain().length;  // number of response classes
-  //  int iterNum = rand.nextInt(10)+2;   // number of iterations to test
-    int iterNum=2;
+    int iterNum = rand.nextInt(10)+2;   // number of iterations to test
     Scope.enter();
     GLMModel.GLMParameters paramsO = new GLMModel.GLMParameters(GLMModel.GLMParameters.Family.ordinal,
             GLMModel.GLMParameters.Family.ordinal.defaultLink, new double[]{0}, new double[]{0}, 0, 0);

@@ -672,7 +672,6 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
       int numClass = _state._nclasses;
       int numIcpt = numClass-1;
       double[] betaCnd = new double[predSize];  // number of predictors
-      double[] icptCnd = new double[numClass-1];
       _state.gslvr().getGradient(beta); // get new gradient info with correct l2pen value.
       double l1pen =  _state.lambda() * _state._alpha;  // l2pen already calculated in gradient
 
@@ -688,7 +687,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
 
         for (int pindex=0; pindex<numIcpt; pindex++) {  // check and then update the intercepts
           int icptindex = (pindex+1)*predSizeP1-1;
-          beta[icptindex] -= icptCnd[pindex];
+          beta[icptindex] -= grads[icptindex];
           if (pindex > 0) {
             int previousIcpt = pindex*predSizeP1-1;
             if (beta[icptindex] < beta[previousIcpt])
