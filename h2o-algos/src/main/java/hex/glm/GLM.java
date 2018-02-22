@@ -684,21 +684,30 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
 
         BetaConstraint bc = _state.activeBC();
         for (int pindex=0; pindex<predSize; pindex++) {
-          betaCnd[pindex] = bc.applyBounds(ADMM.shrinkage(-grads[pindex], l1pen), pindex);
-          beta[pindex] += betaCnd[pindex]; // take the negative of the gradient and stuff
+          betaCnd[pindex] = bc.applyBounds(grads[pindex]+ADMM.shrinkage(beta[pindex], l1pen), pindex);
+          beta[pindex] -= betaCnd[pindex]; // take the negative of the gradient and stuff
         }
 
-        for (int pindex=0; pindex<numIcpt; pindex++) {  // update the intercepts
+        for (int pindex=0; pindex<numIcpt; pindex++) {  // check and then update the intercepts
           int icptindex = (pindex+1)*predSizeP1-1;
           icptCnd[pindex] = bc.applyBounds(-grads[icptindex],icptindex);
           beta[icptindex] += icptCnd[pindex];
+          if (pindex > 0) {
+            int previousIcpt = pindex*predSizeP1-1;
+            if (beta[icptindex] < beta[previousIcpt])
+              error("Ordinal regression training: ", " intercepts of previous class exceed that " +
+                      "of current class.  Make sure your training parameters are set properly.");
+          }
         }
+
         for (int indC = 1; indC < numIcpt; indC++) {
           int indOffset = indC * predSizeP1;
           for (int index=0; index < predSize; index++) {  // copy beta to all classes
             beta[indOffset + index] = beta[index];
           }
         }
+
+
         _state.setActiveClass(-1);
       } while (progress(beta, _state.gslvr().getGradient(beta)));
     }

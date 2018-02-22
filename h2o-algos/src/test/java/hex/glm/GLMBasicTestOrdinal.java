@@ -78,8 +78,8 @@ public class GLMBasicTestOrdinal extends TestUtil {
     paramsO._train = _trainMultinomialEnum._key;
     paramsO._lambda_search = false;
     paramsO._response_column = "C26";
-    paramsO._lambda = new double[]{1e-3};
-    paramsO._alpha = new double[]{0.5};  // l1pen
+    paramsO._lambda = new double[]{1e-5};
+    paramsO._alpha = new double[]{0.001};  // l1pen
     paramsO._objective_epsilon = 1e-6;
     paramsO._beta_epsilon = 1e-4;
     paramsO._standardize = false;
@@ -202,15 +202,14 @@ public class GLMBasicTestOrdinal extends TestUtil {
     for (int npredInd = 0; npredInd < npred; npredInd++) {
       betaGrad[npredInd] *= reg;
       betaGrad[npredInd] += l2pen*beta[npredInd]; // add L2pen
-      betaGrad[npredInd]= ADMM.shrinkage(-betaGrad[npredInd], l1pen);
-      beta[npredInd] += betaGrad[npredInd];
+      betaGrad[npredInd] += ADMM.shrinkage(beta[npredInd], l1pen);
+      beta[npredInd] -= betaGrad[npredInd];
     }
 
     for (int icptInd = 0; icptInd < nicpt; icptInd++) {
       icpt[icptInd] -= icptGrad[icptInd]*reg;
     }
   }
-
 
   double getCDFDeriv(double x) {
     return x*(1-x);
