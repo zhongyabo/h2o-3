@@ -395,7 +395,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
           if (_parms._link == Link.oprobit || _parms._link == Link.ologlog)
             error("_link", "Ordinal regression only supports ologit as link.");
           warn("_solver", "Ordinal regression only works with gradient descent at " +
-                    "this point regardless of what solver you choose.");
+                    "this point.  Do not choose a solver and leave it as default.");
           break;
         case gaussian:
 //          if (_nclass != 1) error("_family", H2O.technote(2, "Gaussian requires the response to be numeric."));
@@ -491,9 +491,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
       if(_offset != null) vecs.add(_offset);
       vecs.add(_response);
       double [] beta = getNullBeta();
-      GLMGradientInfo ginfo = _parms._family==Family.ordinal?new GLMGradientSolver(_job,_parms, _dinfo,
-              _parms._lambda[0]*(1-_parms._alpha[0]), _state.activeBC()).getGradient(beta)
-      :new GLMGradientSolver(_job,_parms, _dinfo, 0, _state.activeBC()).getGradient(beta);
+      GLMGradientInfo ginfo = new GLMGradientSolver(_job,_parms, _dinfo, 0, _state.activeBC()).getGradient(beta);
       _lmax = lmax(ginfo._gradient);
       _state.setLambdaMax(_lmax);
       _model = new GLMModel(_result, _parms, GLM.this, _state._ymu, _dinfo._adaptedFrame.lastVec().sigma(), _lmax, _nobs);
@@ -675,23 +673,23 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
       int numIcpt = numClass-1;
       double[] betaCnd = new double[predSize];  // number of predictors
       double[] icptCnd = new double[numClass-1];
+      _state.gslvr().getGradient(beta); // get new gradient info with correct l2pen value.
+      double l1pen =  _state.lambda() * _state._alpha;  // l2pen already calculated in gradient
+
       do {
         beta = beta.clone();    // copy over the coefficients
         // perform updates only on the betas excluding the intercept
         double[] grads = _state._ginfo._gradient;
         // update all parameters with new gradient;
-        double l1pen =  _state.lambda() * _state._alpha;  // l2pen already calculated in gradient
-
         BetaConstraint bc = _state.activeBC();
-        for (int pindex=0; pindex<predSize; pindex++) {
-          betaCnd[pindex] = bc.applyBounds(grads[pindex]+ADMM.shrinkage(beta[pindex], l1pen), pindex);
+        for (int pindex=0; pindex<predSize; pindex++) { // add l1pen is necessary and coefficient updates
+          betaCnd[pindex] = l1pen==0?grads[pindex]:(grads[pindex]+beta[pindex]>0?l1pen:(beta[pindex]==0?0:-l1pen));
           beta[pindex] -= betaCnd[pindex]; // take the negative of the gradient and stuff
         }
 
         for (int pindex=0; pindex<numIcpt; pindex++) {  // check and then update the intercepts
           int icptindex = (pindex+1)*predSizeP1-1;
-          icptCnd[pindex] = bc.applyBounds(-grads[icptindex],icptindex);
-          beta[icptindex] += icptCnd[pindex];
+          beta[icptindex] -= icptCnd[pindex];
           if (pindex > 0) {
             int previousIcpt = pindex*predSizeP1-1;
             if (beta[icptindex] < beta[previousIcpt])
@@ -706,7 +704,6 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
             beta[indOffset + index] = beta[index];
           }
         }
-
 
         _state.setActiveClass(-1);
       } while (progress(beta, _state.gslvr().getGradient(beta)));
@@ -1160,7 +1157,6 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
           Scope.untrack(vecs[0]._key, vecs[1]._key);
           removeLater(vecs[0]._key, vecs[1]._key);
         }
-
 
         if (_parms._family == Family.ordinal)
           _dinfo.addResponse(new String[]{"__glm_ExpC", "__glm_ExpNPC"}, vecs); // ordinal uses these too
