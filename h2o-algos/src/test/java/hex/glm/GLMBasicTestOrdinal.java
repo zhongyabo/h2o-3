@@ -74,7 +74,7 @@ public class GLMBasicTestOrdinal extends TestUtil {
     Scope.enter();
     GLMModel.GLMParameters paramsO = new GLMModel.GLMParameters(GLMModel.GLMParameters.Family.ordinal,
             GLMModel.GLMParameters.Family.ordinal.defaultLink, new double[]{0}, new double[]{0}, 0, 0);
-    paramsO._train = _trainMultinomialEnum._key;
+    paramsO._train = _trainMultinomial._key;
     paramsO._lambda_search = false;
     paramsO._response_column = "C26";
     paramsO._lambda = new double[]{0};
@@ -85,9 +85,9 @@ public class GLMBasicTestOrdinal extends TestUtil {
 
     GLMModel model = new GLM(paramsO).trainModel().get();
     Scope.track_generic(model);
-    Frame pred = model.score(_trainMultinomialEnum);
+    Frame pred = model.score(_trainMultinomial);
     Scope.track(pred);
-    Assert.assertTrue(model.testJavaScoring(_trainMultinomialEnum, pred, _tol));
+    Assert.assertTrue(model.testJavaScoring(_trainMultinomial, pred, _tol));
     Scope.exit();
   }
 
