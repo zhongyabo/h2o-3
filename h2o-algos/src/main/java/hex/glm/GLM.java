@@ -674,27 +674,42 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
       double[] betaCnd = new double[predSize];  // number of predictors
       _state.gslvr().getGradient(beta); // get new gradient info with correct l2pen value.
       double l1pen =  _state.lambda() * _state._alpha;  // l2pen already calculated in gradient
+      boolean stopNow = false;
 
       do {
         beta = beta.clone();    // copy over the coefficients
         // perform updates only on the betas excluding the intercept
         double[] grads = _state._ginfo._gradient;
-        // update all parameters with new gradient;
-        for (int pindex=0; pindex<predSize; pindex++) { // add l1pen is necessary and coefficient updates
-          betaCnd[pindex] = l1pen==0?grads[pindex]:(grads[pindex]+beta[pindex]>0?l1pen:(beta[pindex]==0?0:-l1pen));
-          beta[pindex] -= betaCnd[pindex]; // take the negative of the gradient and stuff
-        }
 
         for (int pindex=0; pindex<numIcpt; pindex++) {  // check and then update the intercepts
           int icptindex = (pindex+1)*predSizeP1-1;
           beta[icptindex] -= grads[icptindex];
           if (pindex > 0) {
             int previousIcpt = pindex*predSizeP1-1;
-            if (beta[icptindex] < beta[previousIcpt])
-              error("Ordinal regression training: ", " intercepts of previous class exceed that " +
-                      "of current class.  Make sure your training parameters are set properly.");
+            if (beta[icptindex] < beta[previousIcpt]) {
+              warn("Ordinal regression training: ", " intercepts of previous class exceed that " +
+                      "of current class.  Make sure your training parameters are set properly.  Training will " +
+                      "stop now with the last eligible parameters.");
+              stopNow = true;
+              for (int index = 0; index <= pindex; index++) { // restore threshold value to old ones
+                icptindex = (index+1)*predSizeP1-1;
+                beta[icptindex] += grads[icptindex];
+              }
+              break;
+            }
           }
         }
+
+        if (stopNow)  // break out of while loop
+          break;
+
+        // update all parameters with new gradient;
+        for (int pindex=0; pindex<predSize; pindex++) { // add l1pen is necessary and coefficient updates
+          betaCnd[pindex] = l1pen==0?grads[pindex]:(grads[pindex]+beta[pindex]>0?l1pen:(beta[pindex]==0?0:-l1pen));
+          beta[pindex] -= betaCnd[pindex]; // take the negative of the gradient and stuff
+        }
+
+
 
         for (int indC = 1; indC < numIcpt; indC++) {
           int indOffset = indC * predSizeP1;

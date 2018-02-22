@@ -77,7 +77,7 @@ public class GLMBasicTestOrdinal extends TestUtil {
     paramsO._train = _trainMultinomialEnum._key;
     paramsO._lambda_search = false;
     paramsO._response_column = "C26";
-    paramsO._lambda = new double[]{1e-5};
+    paramsO._lambda = new double[]{0};
     paramsO._alpha = new double[]{0.001};  // l1pen
     paramsO._objective_epsilon = 1e-6;
     paramsO._beta_epsilon = 1e-4;
@@ -104,8 +104,8 @@ public class GLMBasicTestOrdinal extends TestUtil {
     paramsO._train = _trainMultinomial._key;
     paramsO._lambda_search = false;
     paramsO._response_column = "C26";
-    paramsO._lambda = new double[]{0};  // no regularization here
-    paramsO._alpha = new double[]{0};  // l1pen
+    paramsO._lambda = new double[]{1e-6};  // no regularization here
+    paramsO._alpha = new double[]{1e-5};  // l1pen
     paramsO._objective_epsilon = 1e-6;
     paramsO._beta_epsilon = 1e-4;
     paramsO._max_iterations = iterNum;
