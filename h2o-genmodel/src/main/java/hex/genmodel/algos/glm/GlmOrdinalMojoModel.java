@@ -1,11 +1,14 @@
 package hex.genmodel.algos.glm;
 
-import hex.genmodel.utils.ArrayUtils;
+import java.util.Arrays;
 
 public class GlmOrdinalMojoModel extends GlmMojoModelBase {
 
   private int P;
   private int noff;
+  private int lastClass;
+  private int secondLastClass;
+  private int[] icptIndices;
 
   GlmOrdinalMojoModel(String[] columns, String[][] domains, String responseColumn) {
     super(columns, domains, responseColumn);
@@ -14,6 +17,14 @@ public class GlmOrdinalMojoModel extends GlmMojoModelBase {
   @Override
   void init() {
     P = _beta.length / _nclasses;
+    int firstIcpt = P-1;
+
+    lastClass = _nclasses-1;
+    secondLastClass = lastClass-1;
+    icptIndices = new int[lastClass];
+    for (int c = 0; c < lastClass; c++) {
+      icptIndices[c] = P-1+c*P;
+    }
     if (P * _nclasses != _beta.length)
       throw new IllegalStateException("Incorrect coding of Beta.");
     noff = _catOffsets[_cats];
@@ -21,47 +32,61 @@ public class GlmOrdinalMojoModel extends GlmMojoModelBase {
 
   @Override
   double[] glmScore0(double[] data, double[] preds) {
-    preds[0] = 0;
-    for (int c = 0; c < _nclasses; ++c) {
-      preds[c + 1] = 0;
-      if (_cats > 0) {
-        if (! _useAllFactorLevels) { // skip level 0 of all factors
-          for (int i = 0; i < _catOffsets.length-1; ++i) if(data[i] != 0) {
+    Arrays.fill(preds, 0.0);
+
+    double etaNoIcpt = 0;
+    if (_cats > 0) {
+      if (!_useAllFactorLevels) { // skip level 0 of all factors
+        for (int i = 0; i < _catOffsets.length - 1; ++i)
+          if (data[i] != 0) {
             int ival = (int) data[i] - 1;
             if (ival != data[i] - 1) throw new IllegalArgumentException("categorical value out of range");
             ival += _catOffsets[i];
             if (ival < _catOffsets[i + 1])
-              preds[c + 1] += _beta[ival + c*P];
+              etaNoIcpt += _beta[ival];
           }
-        } else { // do not skip any levels
-          for(int i = 0; i < _catOffsets.length-1; ++i) {
-            int ival = (int) data[i];
-            if (ival != data[i]) throw new IllegalArgumentException("categorical value out of range");
-            ival += _catOffsets[i];
-            if(ival < _catOffsets[i + 1])
-              preds[c + 1] += _beta[ival + c*P];
-          }
+      } else { // do not skip any levels
+        for (int i = 0; i < _catOffsets.length - 1; ++i) {
+          int ival = (int) data[i];
+          if (ival != data[i]) throw new IllegalArgumentException("categorical value out of range");
+          ival += _catOffsets[i];
+          if (ival < _catOffsets[i + 1])
+            etaNoIcpt += _beta[ival];
         }
       }
-      for (int i = 0; i < _nums; ++i)
-        preds[c+1] += _beta[noff+i + c*P]*data[i];
-      preds[c+1] += _beta[(P-1) + c*P]; // reduce intercept
     }
 
-    double expEta = Math.exp(preds[1]);
-    double currProb = expEta/(1+expEta);
-    double nextProb = 0;
+    for (int i = 0; i < _nums; ++i) // add contribution of numeric columns
+      etaNoIcpt += _beta[noff + i] * data[i];
 
-    preds[1] = currProb;  // 0th class
-    for (int c = 2; c < _nclasses; ++c) { // go class 1 to NC-2
-      expEta = Math.exp(preds[c]);
-      nextProb = expEta/(1+expEta);
-      preds[c] = nextProb-currProb;
-      currProb = nextProb;
+    if (etaNoIcpt < _beta[icptIndices[0]]) { // class 0
+      preds[0] = 0;
+    } else if (etaNoIcpt > _beta[icptIndices[secondLastClass]])
+      preds[0] = lastClass;
+    else {  // row belongs to class 1 to nclass-2
+      for (int c=1; c < lastClass; c++) {
+        if (etaNoIcpt >= _beta[icptIndices[c-1]] && etaNoIcpt <_beta[icptIndices[c]]) {
+          preds[0] = c;
+          break;
+        }
+      }
     }
-    preds[_nclasses] = 1-currProb;  // set the value to the last class
-    preds[0] = 0;
-    preds[0] = ArrayUtils.maxIndex(preds)-1;
+    // calculate cdf for each class
+    double expEta = Math.exp(etaNoIcpt+_beta[icptIndices[0]]);
+    preds[1]  = expEta/(1+expEta);
+    double previousCDF = expEta;
+    expEta = Math.exp(etaNoIcpt+_beta[icptIndices[secondLastClass]]);
+    preds[lastClass] = 1-(expEta/(1+expEta));
+
+    for (int c = 1; c < lastClass; c++) {
+      expEta = Math.exp(etaNoIcpt+_beta[icptIndices[c]]);
+      double currCDF = expEta/(1+expEta);
+      if (currCDF > previousCDF) {
+        preds[c+1] = currCDF-previousCDF;
+        previousCDF = currCDF;
+      } else
+        break;
+    }
     return preds;
   }
 }

@@ -31,6 +31,9 @@ public class GLMScore extends MRTask<GLMScore> {
   private final double []_beta;
   private final double [][] _beta_multinomial;
   private final double _defaultThreshold;
+  int _icptInd; // index of intercept term
+  int _lastClass;
+  int _lastThesholdInd;
 
 
 
@@ -43,6 +46,10 @@ public class GLMScore extends MRTask<GLMScore> {
     _generatePredictions = generatePredictions;
     _m._parms = m._parms;
     _nclasses = m._output.nclasses();
+    _lastClass = _nclasses-1;
+    _lastThesholdInd = _lastClass-1;
+    _icptInd = dinfo.fullN();
+
     if(_m._parms._family == GLMModel.GLMParameters.Family.multinomial ||
             _m._parms._family == GLMModel.GLMParameters.Family.ordinal){
       _beta = null;
@@ -75,23 +82,37 @@ public class GLMScore extends MRTask<GLMScore> {
   public double [] scoreRow(DataInfo.Row r, double o, double [] preds) {
     if(_m._parms._family == GLMModel.GLMParameters.Family.ordinal) {  // todo: change this to take various link func
       final double[][] bm = _beta_multinomial;
-      Arrays.fill(preds,0); // zero out preds
-      int lastClass  = bm.length-1;
-      double expEta = Math.exp(r.innerProduct(bm[0])+o);
-      double currProb = expEta/(1+expEta);
-      double nextProb = 0;
+      Arrays.fill(preds,0.0); // zero out preds
+      double etaNothreshold = -r.innerProduct(bm[0], false, false)+o;
+      // assign row to class here
+      if (etaNothreshold < bm[0][_icptInd]) {
+        preds[0] = 0;
+      } else if (etaNothreshold > bm[_lastClass][_icptInd]) {
+        preds[0] = _lastClass;
+      } else {
+        for (int cInd = 1; cInd < _lastClass; ++cInd) {
+          if (etaNothreshold<bm[cInd][_icptInd] && etaNothreshold>=bm[cInd][_icptInd]) {
+            preds[0] = cInd;
+            break;
+          }
+        }
+      }
+      // assign cdf to every class for this row
+      double expEta = Math.exp(r.innerProduct(bm[_lastThesholdInd])+o);
+      preds[_lastClass] = 1-expEta/(1+expEta);
+      expEta = Math.exp(r.innerProduct(bm[0])+o);
+      preds[1] = expEta/(1+expEta);
+      double previousCDF = preds[1];
 
-      preds[1] = currProb;
-      for (int c = 1; c < lastClass; ++c) { // go class 1 to NC-2
-        expEta = Math.exp(r.innerProduct(bm[c])+o);
-        nextProb = expEta/(1+expEta);
-        preds[c+1] = nextProb-currProb;
-        currProb = nextProb;
-        if (currProb >= 1)  // max out all probability already
+      for (int cInd = 1; cInd < _lastClass; cInd++) {
+        expEta = Math.exp(r.innerProduct(bm[cInd])+o);
+        double currCDF = expEta/(1+expEta);
+        if (currCDF > previousCDF) {
+          preds[cInd+1] = currCDF - previousCDF;
+          previousCDF = currCDF;
+        } else
           break;
       }
-      preds[bm.length] = 1-nextProb;  // set the value to the last class
-      preds[0] = ArrayUtils.maxIndex(preds)-1;
     } else if (_m._parms._family == GLMModel.GLMParameters.Family.multinomial) {
       double[] eta = _eta;
       final double[][] bm = _beta_multinomial;

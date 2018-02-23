@@ -1120,6 +1120,8 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
 
   @Override protected double[] score0(double[] data, double[] preds){return score0(data,preds,0);}
   @Override protected double[] score0(double[] data, double[] preds, double o) {
+    throw H2O.unimpl("Offset is not implemented for multinomial/ordinal.");
+/*
     if(_parms._family == Family.multinomial || _parms._family == Family.ordinal) {
       if (o != 0) throw H2O.unimpl("Offset is not implemented for multinomial/ordinal.");
       double[] eta = _eta.get();
@@ -1193,6 +1195,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         preds[0] = mu;
     }
     return preds;
+*/
   }
 
   @Override protected void toJavaPredictBody(SBPrintStream body,

@@ -863,6 +863,10 @@ public class DataInfo extends Keyed<DataInfo> {
 
     public final double innerProduct(double [] vec) { return innerProduct(vec,false);}
     public final double innerProduct(double [] vec, boolean icptFirst) {
+      return innerProduct(vec, icptFirst, _intercept);
+    }
+
+    public final double innerProduct(double [] vec, boolean icptFirst, boolean addIcpt) {
       double res = 0;
       int off = 0;
       if(icptFirst) {
@@ -880,7 +884,7 @@ public class DataInfo extends Keyed<DataInfo> {
         for (int i = 0; i < nNums; ++i)
           res += numVals[i] * vec[off+numIds[i]];
       }
-      if(_intercept && !icptFirst)
+      if(addIcpt && !icptFirst) // ordinal regression predict excludes the threshold
         res += vec[vec.length-1];
       return res;
     }
