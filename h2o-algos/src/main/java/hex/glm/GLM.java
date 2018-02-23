@@ -669,7 +669,8 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
 
     // use regular gradient descend here.  Need to figure out how to adjust for the alpha, lambda for the elastic net
     private void fitIRLSM_ordinal_default(Solver s) {
-      assert _dinfo._responses == 3 : "IRLSM for ordinal needs extra information encoded in additional reponses, expected 3 response vecs, got " + _dinfo._responses;
+      assert _dinfo._responses == 3 : "Solver for ordinal needs extra information encoded in additional reponses, " +
+              "expected 3 response vecs, got " + _dinfo._responses;
       double[] beta = _state.betaMultinomial();
       int predSize = _dinfo.fullN();
       int predSizeP1 = predSize+1;
@@ -709,11 +710,12 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
 
         // update all parameters with new gradient;
         for (int pindex=0; pindex<predSize; pindex++) { // add l1pen is necessary and coefficient updates
-          betaCnd[pindex] = l1pen==0?grads[pindex]:(grads[pindex]+beta[pindex]>0?l1pen:(beta[pindex]==0?0:-l1pen));
+          betaCnd[pindex]=grads[pindex];
+          if (l1pen>0) {
+            betaCnd[pindex] += beta[pindex]>0?l1pen:(beta[pindex]==0?0:-l1pen);
+          }
           beta[pindex] -= betaCnd[pindex]; // take the negative of the gradient and stuff
         }
-
-
 
         for (int indC = 1; indC < numIcpt; indC++) {
           int indOffset = indC * predSizeP1;

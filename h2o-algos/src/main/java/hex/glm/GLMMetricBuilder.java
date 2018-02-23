@@ -162,7 +162,7 @@ public class GLMMetricBuilder extends MetricBuilderSupervised<GLMMetricBuilder> 
   public final long nullDOF() { return _nobs - (_intercept?1:0);}
   public final long resDOF() {
     if (_glmf._family == Family.ordinal)
-      return _nobs-(_rank/_nclasses+_nclasses-2); // one set of beta for all class and the intercepts for nclass-1
+      return _nobs-(_rank/(_nclasses-1)+_nclasses-2); // one set of beta for all class and the intercepts for nclass-1
     else
       return _nobs - _rank;
   }
