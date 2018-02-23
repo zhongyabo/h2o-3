@@ -66,7 +66,7 @@ public class GLMBasicTestOrdinal extends TestUtil {
 
   // test and make sure the h2opredict, pojo and mojo predict agrees with multinomial dataset that includes
   // both enum and numerical datasets
-  @Ignore
+  @Test
   public void testOrdinalPredMojoPojo() {
     Scope.enter();
     GLMModel.GLMParameters paramsO = new GLMModel.GLMParameters(GLMModel.GLMParameters.Family.ordinal,
