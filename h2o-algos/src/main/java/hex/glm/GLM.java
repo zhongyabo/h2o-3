@@ -1,36 +1,44 @@
 package hex.glm;
 
-import hex.*;
+import hex.DataInfo;
+import hex.ModelBuilder;
+import hex.ModelCategory;
+import hex.ModelMetrics;
 import hex.deeplearning.DeepLearningModel.DeepLearningParameters.MissingValuesHandling;
-import hex.glm.GLMModel.*;
-import hex.optimization.ADMM.L1Solver;
-import hex.optimization.L_BFGS;
+import hex.glm.GLMModel.GLMOutput;
+import hex.glm.GLMModel.GLMParameters;
 import hex.glm.GLMModel.GLMParameters.Family;
 import hex.glm.GLMModel.GLMParameters.Link;
 import hex.glm.GLMModel.GLMParameters.Solver;
+import hex.glm.GLMModel.GLMWeightsFun;
+import hex.glm.GLMModel.Submodel;
 import hex.glm.GLMTask.*;
 import hex.gram.Gram;
 import hex.gram.Gram.Cholesky;
 import hex.gram.Gram.NonSPDMatrixException;
 import hex.optimization.ADMM;
+import hex.optimization.ADMM.L1Solver;
 import hex.optimization.ADMM.ProximalSolver;
-import hex.optimization.L_BFGS.*;
+import hex.optimization.L_BFGS;
+import hex.optimization.L_BFGS.ProgressMonitor;
+import hex.optimization.L_BFGS.Result;
 import hex.optimization.OptimizationUtils.*;
 import jsr166y.CountedCompleter;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import water.*;
 import water.exceptions.H2OModelBuilderIllegalArgumentException;
-import water.fvec.*;
+import water.fvec.Frame;
+import water.fvec.Vec;
 import water.parser.BufferedString;
 import water.util.*;
-import water.util.ArrayUtils;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Random;
 
 /**
  * Created by tomasnykodym on 8/27/14.
@@ -330,14 +338,14 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
         _nullBeta = MemoryManager.malloc8d((_dinfo.fullN() + 1) * nclasses());
         int N = _dinfo.fullN() + 1;
         if(_parms._intercept)
-          if (_parms._family==Family.ordinal) {
-          double sumYmu = 0;
-          for (int i = 0; i < nclasses()-1; i++) {  // only contains nclass-2 thresholds here
-            sumYmu += _state._ymu[i];
-            if (sumYmu >= 1)
-              error("Response error", "Response category level has 0 prior.");
-            _nullBeta[_dinfo.fullN() + i * N] = Math.log(sumYmu/(1-sumYmu));
-          }
+          if (_parms._family == Family.ordinal) { // ordinal regression use random sorted start values
+            Random rng = RandomUtils.getRNG(_parms._seed);
+            double sumYmu = 0;
+            for (int i = 0; i < nclasses() - 1; i++) {  // only contains nclass-2 thresholds here
+              double nextVal = rng.nextDouble();
+              sumYmu += nextVal >0?nextVal:-nextVal;
+              _nullBeta[_dinfo.fullN() + i * N] = sumYmu;
+            }
           } else {
           for (int i = 0; i < nclasses(); ++i)
             _nullBeta[_dinfo.fullN() + i * N] = Math.log(_state._ymu[i]);
