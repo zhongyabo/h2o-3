@@ -7,6 +7,7 @@ import water.MemoryManager;
 import water.Scope;
 import water.TestUtil;
 import water.fvec.Frame;
+import water.util.RandomUtils;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -107,6 +108,7 @@ public class GLMBasicTestOrdinal extends TestUtil {
     paramsO._beta_epsilon = 1e-4;
     paramsO._max_iterations = iterNum;
     paramsO._standardize = false;
+    paramsO._seed = 987654321;
 
     GLMModel model = new GLM(paramsO).trainModel().get();
     Scope.track_generic(model);
@@ -141,10 +143,15 @@ public class GLMBasicTestOrdinal extends TestUtil {
     double l2pen = params._lambda[0]*(1-params._alpha[0]);
     double l1pen = params._lambda[0]*params._alpha[0];
     double reg = params._obj_reg;
-    double icpt = 0;
+    Random rng = RandomUtils.getRNG(params._seed);
+    double[] tempIcpt = new double[lastClass];
+    for (int i = 0; i < lastClass; i++) {  // only contains nclass-2 thresholds here
+      tempIcpt[i] = rng.nextDouble() * nclass;
+    }
+    Arrays.sort(tempIcpt);
+
     for (int index = 0; index < lastClass; index++) { // initialize intercept of beta values
-      icpt += icptPDF[index];
-      intercpts[index] = Math.log(icpt/(1-icpt));
+      intercpts[index] = tempIcpt[index];
     }
 
     int rowNum = (int) fr.numRows();

@@ -340,12 +340,15 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
         if(_parms._intercept)
           if (_parms._family == Family.ordinal) { // ordinal regression use random sorted start values
             Random rng = RandomUtils.getRNG(_parms._seed);
-            double sumYmu = 0;
-            for (int i = 0; i < nclasses() - 1; i++) {  // only contains nclass-2 thresholds here
-              double nextVal = rng.nextDouble();
-              sumYmu += nextVal >0?nextVal:-nextVal;
-              _nullBeta[_dinfo.fullN() + i * N] = sumYmu;
+            int lastClass = nclasses()-1;
+            double[] tempIcpt = new double[lastClass];
+            for (int i = 0; i < lastClass; i++) {  // only contains nclass-2 thresholds here
+              tempIcpt[i] = rng.nextDouble() * nclasses();
             }
+            Arrays.sort(tempIcpt);
+
+            for (int i = 0; i < lastClass; i++)
+              _nullBeta[_dinfo.fullN() + i * N] = tempIcpt[i];
           } else {
           for (int i = 0; i < nclasses(); ++i)
             _nullBeta[_dinfo.fullN() + i * N] = Math.log(_state._ymu[i]);

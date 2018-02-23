@@ -82,7 +82,7 @@ public class GLMScore extends MRTask<GLMScore> {
   public double [] scoreRow(DataInfo.Row r, double o, double [] preds) {
     if(_m._parms._family == GLMModel.GLMParameters.Family.ordinal) {  // todo: change this to take various link func
       final double[][] bm = _beta_multinomial;
-      Arrays.fill(preds,0.0); // zero out preds
+      Arrays.fill(preds,1e-10); // initialize to small number
       double etaNothreshold = -r.innerProduct(bm[0], false, false)+o;
       // assign row to class here
       if (etaNothreshold < bm[0][_icptInd]) {

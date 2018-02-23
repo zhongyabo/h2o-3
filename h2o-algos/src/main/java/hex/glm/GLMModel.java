@@ -1288,7 +1288,7 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         body.ip("sum_exp = 1/sum_exp;").nl();
         body.ip("double max_p = 0;").nl();
         body.ip("for(int c = 1; c < preds.length; ++c) if((preds[c] *= sum_exp) > max_p){ max_p = preds[c]; preds[0] = c-1;};").nl();
-      } else {  // special for ordinal
+      } else {  // special for ordinal todo: fix this one.  It is bnot correct right now.
         body.ip("double expEta = Math.exp(preds[1]);").nl();
         body.ip("double currProb = expEta/(1+expEta);").nl();
         body.ip("double nextProb = 0;").nl();
