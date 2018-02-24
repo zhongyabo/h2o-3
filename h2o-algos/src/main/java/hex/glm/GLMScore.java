@@ -87,7 +87,7 @@ public class GLMScore extends MRTask<GLMScore> {
       // assign row to class here
       if (etaNothreshold < bm[0][_icptInd]) {
         preds[0] = 0;
-      } else if (etaNothreshold > bm[_lastClass][_icptInd]) {
+      } else if (etaNothreshold >= bm[_lastClass][_icptInd]) {
         preds[0] = _lastClass;
       } else {
         for (int cInd = 1; cInd < _lastClass; ++cInd) {
@@ -110,9 +110,12 @@ public class GLMScore extends MRTask<GLMScore> {
         if (currCDF > previousCDF) {
           preds[cInd+1] = currCDF - previousCDF;
           previousCDF = currCDF;
-        } else
+        } else {
+          previousCDF = 1-1e-10;
           break;
+        }
       }
+      preds[_lastClass] = 1-previousCDF;
     } else if (_m._parms._family == GLMModel.GLMParameters.Family.multinomial) {
       double[] eta = _eta;
       final double[][] bm = _beta_multinomial;

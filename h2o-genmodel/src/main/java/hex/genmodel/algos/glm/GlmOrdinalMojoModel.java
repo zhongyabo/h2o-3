@@ -59,13 +59,14 @@ public class GlmOrdinalMojoModel extends GlmMojoModelBase {
     for (int i = 0; i < _nums; ++i) // add contribution of numeric columns
       etaNoIcpt += _beta[noff + i] * data[i];
 
-    if (etaNoIcpt < _beta[icptIndices[0]]) { // class 0
+    double netaNoIcpt = -etaNoIcpt;
+    if (netaNoIcpt < _beta[icptIndices[0]]) { // class 0
       preds[0] = 0;
-    } else if (etaNoIcpt > _beta[icptIndices[secondLastClass]])
+    } else if (netaNoIcpt >= _beta[icptIndices[secondLastClass]])
       preds[0] = lastClass;
     else {  // row belongs to class 1 to nclass-2
       for (int c=1; c < lastClass; c++) {
-        if (etaNoIcpt >= _beta[icptIndices[c-1]] && etaNoIcpt <_beta[icptIndices[c]]) {
+        if (netaNoIcpt >= _beta[icptIndices[c-1]] && netaNoIcpt <_beta[icptIndices[c]]) {
           preds[0] = c;
           break;
         }
@@ -74,19 +75,19 @@ public class GlmOrdinalMojoModel extends GlmMojoModelBase {
     // calculate cdf for each class
     double expEta = Math.exp(etaNoIcpt+_beta[icptIndices[0]]);
     preds[1]  = expEta/(1+expEta);
-    double previousCDF = expEta;
-    expEta = Math.exp(etaNoIcpt+_beta[icptIndices[secondLastClass]]);
-    preds[lastClass] = 1-(expEta/(1+expEta));
-
+    double previousCDF = preds[1];
     for (int c = 1; c < lastClass; c++) {
       expEta = Math.exp(etaNoIcpt+_beta[icptIndices[c]]);
       double currCDF = expEta/(1+expEta);
       if (currCDF > previousCDF) {
         preds[c+1] = currCDF-previousCDF;
         previousCDF = currCDF;
-      } else
+      } else {
+        previousCDF = 1-1e-10;
         break;
+      }
     }
+    preds[lastClass] = 1-previousCDF;
     return preds;
   }
 }

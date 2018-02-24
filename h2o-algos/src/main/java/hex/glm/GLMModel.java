@@ -27,6 +27,10 @@ import java.util.NoSuchElementException;
  * Created by tomasnykodym on 8/27/14.
  */
 public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLMOutput> {
+  public int _lastClass;
+  public int _secondToLast;
+  public int _icptInd;
+
 
   public GLMModel(Key selfKey, GLMParameters parms, GLM job, double [] ymu, double ySigma, double lambda_max, long nobs) {
     super(selfKey, parms, job == null?new GLMOutput():new GLMOutput(job));
@@ -36,6 +40,9 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
     _lambda_max = lambda_max;
     _nobs = nobs;
     _nullDOF = nobs - (parms._intercept?1:0);
+    _lastClass = ymu.length-1;
+    _secondToLast = _lastClass-1;
+    _icptInd = _output._dinfo.fullN();
   }
 
   public void setVcov(double[][] inv) {_output._vcov = inv;}
@@ -1120,8 +1127,6 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
 
   @Override protected double[] score0(double[] data, double[] preds){return score0(data,preds,0);}
   @Override protected double[] score0(double[] data, double[] preds, double o) {
-    throw H2O.unimpl("Offset is not implemented for multinomial/ordinal.");
-/*
     if(_parms._family == Family.multinomial || _parms._family == Family.ordinal) {
       if (o != 0) throw H2O.unimpl("Offset is not implemented for multinomial/ordinal.");
       double[] eta = _eta.get();
@@ -1131,7 +1136,9 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
       double sumExp = 0;
       double maxRow = 0;
       for (int c = 0; c < bm.length; ++c) {
-        double e = bm[c][bm[c].length - 1];
+        double e = bm[c][_icptInd]; // grab the intercept, replace the bm[0].length-1
+        if (_parms._family == Family.ordinal)
+          e = 0.0;  // do not add intercept for ordinal regression
         double[] b = bm[c];
         for (int i = 0; i < _output._dinfo._cats; ++i) {
           int l = _output._dinfo.getCategoricalId(i, data[i]);
@@ -1147,6 +1154,8 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         }
         if (e > maxRow) maxRow = e;
         eta[c] = e;
+        if (_parms._family == Family.ordinal)
+          break;  // only need one eta for all classes
       }
       if (_parms._family == Family.multinomial) {
         for (int c = 0; c < bm.length; ++c)
@@ -1156,20 +1165,37 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
           preds[c + 1] = eta[c] * sumExp;
         preds[0] = ArrayUtils.maxIndex(eta);
       } else {  // scoring for ordinal
-        int lastClass  = bm.length-1; // bm is parameters nclass by numPred+1
-        double expEta = Math.exp(eta[0]);
-        double currProb = expEta/(1+expEta);
-        double nextProb = 0;
-
-        preds[1] = currProb;
-        for (int c = 1; c < lastClass; ++c) { // go class 1 to NC-2
-          expEta = Math.exp(eta[c]);
-          nextProb = expEta/(1+expEta);
-          preds[c+1] = nextProb-currProb;
-          currProb = nextProb;
+        // first assign the class
+        Arrays.fill(preds, 1e-10);
+        double neta = -eta[0];  // intercept term is not added
+        if (neta < bm[0][_icptInd]) {
+          preds[0] = 0;
+        } else if (neta >= bm[_secondToLast][_icptInd]) {
+          preds[0] = _lastClass;
+        } else {
+          for (int c = 1; c < _lastClass; c++) {
+            if (neta >= bm[c-1][_icptInd] && neta < bm[c][_icptInd]) {
+              preds[0] = c;
+              break;
+            }
+          }
         }
-        preds[bm.length] = 1-nextProb;  // set the value to the last class
-        preds[0] = ArrayUtils.maxIndex(eta);
+        // now calculate the pdf for each class
+        double expEta = Math.exp(eta[0]+bm[0][_icptInd]);
+        preds[1] = expEta/(1+expEta);
+        double previousProb = preds[1];
+        for (int c = 1; c < _lastClass; ++c) { // go class 1 to NC-2
+          expEta = Math.exp(eta[0]+bm[c][_icptInd]);
+          double nextProb = expEta/(1+expEta);
+          if (nextProb > previousProb) {
+            preds[c + 1] = nextProb - previousProb;
+            previousProb = nextProb;
+          } else {
+            previousProb = 1-1e-10;
+            break;
+          }
+        }
+        preds[bm.length] = 1-previousProb;  // set the value to the last class
       }
     } else {
       double[] b = beta();
@@ -1195,7 +1221,6 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
         preds[0] = mu;
     }
     return preds;
-*/
   }
 
   @Override protected void toJavaPredictBody(SBPrintStream body,
