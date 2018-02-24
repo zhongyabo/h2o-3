@@ -91,7 +91,7 @@ public class GLMScore extends MRTask<GLMScore> {
         preds[0] = _lastClass;
       } else {
         for (int cInd = 1; cInd < _lastClass; ++cInd) {
-          if (etaNothreshold<bm[cInd][_icptInd] && etaNothreshold>=bm[cInd][_icptInd]) {
+          if (etaNothreshold<bm[cInd][_icptInd] && etaNothreshold>=bm[cInd-1][_icptInd]) {
             preds[0] = cInd;
             break;
           }
