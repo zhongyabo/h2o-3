@@ -38,7 +38,6 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Random;
 
 /**
  * Created by tomasnykodym on 8/27/14.
@@ -339,13 +338,13 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
         int N = _dinfo.fullN() + 1;
         if(_parms._intercept)
           if (_parms._family == Family.ordinal) { // ordinal regression use random sorted start values
-/*            double sumPDF = 0.0;
+            double sumPDF = 0.0;
             int lastClass = nclasses()-1;
             for (int ind = 0; ind < lastClass; ind++) {
               sumPDF += _state._ymu[0];
               _nullBeta[_dinfo.fullN()+ind*N] = -Math.log((1-sumPDF)/sumPDF)*lastClass;
-            }*/
-            Random rng = RandomUtils.getRNG(_parms._seed);
+            }
+/*            Random rng = RandomUtils.getRNG(_parms._seed);
             int lastClass = nclasses()-1;
             double[] tempIcpt = new double[lastClass];
             for (int i = 0; i < lastClass; i++) {  // only contains nclass-2 thresholds here
@@ -357,7 +356,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
               _nullBeta[_dinfo.fullN() + i * N] = tempIcpt[i];
           } else {
           for (int i = 0; i < nclasses(); ++i)
-            _nullBeta[_dinfo.fullN() + i * N] = Math.log(_state._ymu[i]);
+            _nullBeta[_dinfo.fullN() + i * N] = Math.log(_state._ymu[i]);*/
         }
       } else {
         _nullBeta = MemoryManager.malloc8d(_dinfo.fullN() + 1);

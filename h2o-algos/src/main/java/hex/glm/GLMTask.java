@@ -918,8 +918,9 @@ public abstract class GLMTask  {
     // the intercepts in etas_offsets for each row of data
     final void computeGradientMultipliers(double [][] etas, double [][] etasOffset, double [] ys, double [] ws) {
       int K = _beta[0].length;    // number of class
-      double[] tempEtas = new double[K];  // store original etas
+      double[] tempEtas = new double[K];  // store original etas with the intercept
       int y;  // get and store response class category
+
       double yJ, yJm1;
       for (int row = 0; row < etas.length; row++) { // calculate the multiplier from each row
         double w = ws[row];
@@ -932,29 +933,36 @@ public abstract class GLMTask  {
         Arrays.fill(etas[row], 0);    // zero out etas for current row
         y = (int) ys[row];  // get response class category
         if (y==0) { // response is in 0th category
-          etasOffset[row][0] = _glmp.linkInv(tempEtas[0])-1;
-          etas[row][0] = etasOffset[row][0];
-          _likelihood -= w*tempEtas[y]-Math.log(1+Math.exp(tempEtas[y]));
+          double etaOnly = _beta[_interceptId][0]-tempEtas[0]; // no intercept
+          if (etaOnly < _beta[_interceptId][0]) {
+            double tempEtas2 = tempEtas[0];// + _beta[_interceptId][0]*0.1;
+            etasOffset[row][0] = 2 * tempEtas2;
+            for (int index = 1; index < _theLast; index++)
+              etasOffset[row][index]=etasOffset[row][0];  // add to all next class
+            etas[row][0] = tempEtas2;
+            _likelihood += tempEtas2 * tempEtas2;
+          }
+
         } else if (y==_theLast) { // response is in last category
-          etasOffset[row][_secondToLast] = _glmp.linkInv(tempEtas[_secondToLast]);
-          etas[row][0] = etasOffset[row][_secondToLast];
-          _likelihood += w*Math.log(1+Math.exp(tempEtas[_secondToLast]));
+          double etaOnly = _beta[_interceptId][_secondToLast]-tempEtas[_secondToLast];
+          if (etaOnly > _beta[_interceptId][_secondToLast]) {
+            double tempEtas2 = tempEtas[_secondToLast];// + _beta[_interceptId][_secondToLast]*0.1;
+            etas[row][0] = 2 * tempEtas2;
+            etasOffset[row][_secondToLast] = tempEtas2;
+            _likelihood += tempEtas2 * tempEtas2;
+          }
         } else {  // perform update for response between 1 to K-2, y can affect class y and y-1
           int lastC = y-1;  // previous class
-          yJ = _glmp.linkInv(tempEtas[y]);
-          yJm1 = _glmp.linkInv(tempEtas[lastC]);
-          double den = yJ-yJm1;
-          den = den==0.0?1e-10:den;
-          _likelihood -= w*Math.log(den);
-          etas[row][0] = yJ+yJm1-1.0; // for non-intercepts
-          double oneMcdfPC = 1-yJm1;
-          oneMcdfPC = oneMcdfPC==0.0?1e-10:oneMcdfPC;
-          double oneOthreshold = 1-Math.exp(_beta[_interceptId][lastC]-_beta[_interceptId][y]);
-          oneOthreshold = oneOthreshold==0.0?1e-10:oneOthreshold;
-          double oneOverThreshold = 1.0/oneOthreshold;
-          etasOffset[row][y] = (yJ-1)*oneOverThreshold/oneMcdfPC;
-          yJ = yJ==0?1e-10:yJ;
-          etasOffset[row][lastC] = yJm1*oneOverThreshold/yJ;
+          double etaOnly = _beta[_interceptId][y]-tempEtas[y];
+          if (etaOnly < _beta[_interceptId][lastC]) {
+            etas[row][0] = 2*tempEtas[lastC];
+            etas[row][lastC] = tempEtas[lastC];
+            _likelihood += tempEtas[lastC]*tempEtas[lastC];
+          } else if (etaOnly > _beta[_interceptId][y]){
+            etas[row][0] = 2*tempEtas[y];
+            etas[row][lastC] = tempEtas[y];
+            _likelihood += tempEtas[y]*tempEtas[y];
+          }
         }
         for (int c=1; c<K; c++)  // set beta of all classes to be the same
           etas[row][c]=etas[row][0];
