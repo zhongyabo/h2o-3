@@ -460,13 +460,14 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
 //        case multinomial: // should not be used
         case identity:
           return x;
-        case ologit:  // return the CDF here
+/*        case ologit:  // return the CDF here
           double expx = Math.exp(x);
-          return expx/(1.0+expx);
+          return expx/(1.0+expx);*/
         case ologlog:
           return 1.0-Math.exp(-1.0*Math.exp(x));
         case oprobit:
           return _dprobit.cumulativeProbability(x);
+        case ologit:
         case logit:
           return 1.0 / (Math.exp(-x) + 1.0);
         case log:

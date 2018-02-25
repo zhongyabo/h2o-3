@@ -943,17 +943,19 @@ public abstract class GLMTask  {
           int lastC = y-1;  // previous class
           yJ = _glmp.linkInv(tempEtas[y]);
           yJm1 = _glmp.linkInv(tempEtas[lastC]);
-          double num = -_glmp.linkInvDeriv(yJ); //yJ*yJ-yJ;
-          double numJm1 = _glmp.linkInvDeriv(yJm1); //yJm1-yJm1*yJm1;
           double den = yJ-yJm1;
           den = den==0.0?1e-10:den;
-          double oneOden = 1/den;
-          etasOffset[row][y] = num*oneOden;
-          etas[row][0] = yJ+yJm1-1.0;
-          etasOffset[row][lastC] = numJm1*oneOden;
           _likelihood -= w*Math.log(den);
+          etas[row][0] = yJ+yJm1-1.0; // for non-intercepts
+          double oneMcdfPC = 1-yJm1;
+          oneMcdfPC = oneMcdfPC==0.0?1e-10:oneMcdfPC;
+          double oneOthreshold = 1-Math.exp(_beta[_interceptId][lastC]-_beta[_interceptId][y]);
+          oneOthreshold = oneOthreshold==0.0?1e-10:oneOthreshold;
+          double oneOverThreshold = 1.0/oneOthreshold;
+          etasOffset[row][y] = (yJ-1)*oneOverThreshold/oneMcdfPC;
+          yJ = yJ==0?1e-10:yJ;
+          etasOffset[row][lastC] = yJm1*oneOverThreshold/yJ;
         }
-
         for (int c=1; c<K; c++)  // set beta of all classes to be the same
           etas[row][c]=etas[row][0];
       }

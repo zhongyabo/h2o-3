@@ -109,17 +109,22 @@ public class GLMBasicTestOrdinal extends TestUtil {
     paramsO._max_iterations = iterNum;
     paramsO._standardize = false;
     paramsO._seed = 987654321;
+    paramsO._obj_reg = 1e-7;
 
     GLMModel model = new GLM(paramsO).trainModel().get();
     Scope.track_generic(model);
     double[] interceptPDF = model._ymu;
     double[][] coeffs = model._output._global_beta_multinomial; // class by npred
     double[] beta = new double[coeffs[0].length-1]; // coefficients not including the intercepts
+    double[] beta2 = new double[coeffs[0].length-1];
     double[] icpt = new double[coeffs.length-1]; // all the intercepts
+    double[] icpt2 = new double[coeffs.length-1];
     updateOrdinalCoeff( _trainMultinomial, 25, paramsO, interceptPDF, coeffs[0].length,
             Integer.parseInt(model._output._model_summary.getCellValues()[0][5].toString()), beta, icpt);
+    updateOrdinalCoeff2( _trainMultinomial, 25, paramsO, interceptPDF, coeffs[0].length,
+            Integer.parseInt(model._output._model_summary.getCellValues()[0][5].toString()), beta2, icpt2);
     Scope.exit();
-    compareMultCoeffs(coeffs, beta, icpt);  // compare and check coefficients agree
+    compareMultCoeffs(coeffs, beta2, icpt2);  // compare and check coefficients agree
   }
 
   public void compareMultCoeffs(double[][] coeffs, double[] beta, double[] icpt) {
@@ -130,7 +135,8 @@ public class GLMBasicTestOrdinal extends TestUtil {
       assertEquals(coeffs[icptInd][beta.length], icpt[icptInd], _tol);
   }
 
-  public void updateOrdinalCoeff(Frame fr, int respCol, GLMModel.GLMParameters params, double[] icptPDF,
+  // original version
+  public void updateOrdinalCoeff2(Frame fr, int respCol, GLMModel.GLMParameters params, double[] icptPDF,
                                  int npred, int numRuns, double[] beta, double[] intercpts) {
     int nclass = icptPDF.length;  // number of class of response variable
     int lastClass = nclass-1;
@@ -174,6 +180,77 @@ public class GLMBasicTestOrdinal extends TestUtil {
           double oneODelta = 1.0/(delta==0?1e-10:delta);
           multiplierI[0] = -getCDFDeriv(cdfC)*oneODelta;
           multiplierI[1] = getCDFDeriv(cdfPC)*oneODelta;
+        }
+        if (multiplier != 0.0) {
+          for (int predInd = 0; predInd < lastPred; predInd++) { // calculate gradient of non-intercept coefficients
+            betaGrad[predInd] += multiplier * fr.vec(predInd).at(row);
+          }
+        }
+
+        if (yresp < lastClass) {
+          icptGrad[yresp] += multiplierI[0];  // calculate gradient of intercept terms
+          if (yresp > 0) {
+            icptGrad[yresp - 1] += multiplierI[1];
+          }
+        } else {  // yresp = C-1
+          icptGrad[yresp-1] += multiplierI[0];
+        }
+      }
+      addGradChange(beta, betaGrad, intercpts, icptGrad, l2pen, l1pen, reg);
+      Arrays.fill(betaGrad, 0.0);
+      Arrays.fill(icptGrad, 0.0);
+    }
+  }
+
+  // implemented my simplified version
+  public void updateOrdinalCoeff(Frame fr, int respCol, GLMModel.GLMParameters params, double[] icptPDF,
+                                 int npred, int numRuns, double[] beta, double[] intercpts) {
+    int nclass = icptPDF.length;  // number of class of response variable
+    int lastClass = nclass-1;
+    int lastPred = npred-1;
+
+    double[] betaGrad = new double[lastPred]; // store gradient calculation of non-intercepts
+    double[] icptGrad = new double[lastClass];  // store gradient calculation of intercepts
+    double multiplier = 0.0;
+    double[] multiplierI = new double[2];
+    double l2pen = params._lambda[0]*(1-params._alpha[0]);
+    double l1pen = params._lambda[0]*params._alpha[0];
+    double reg = params._obj_reg;
+    Random rng = RandomUtils.getRNG(params._seed);
+    double[] tempIcpt = new double[lastClass];
+    for (int i = 0; i < lastClass; i++) {  // only contains nclass-2 thresholds here
+      tempIcpt[i] = rng.nextDouble() * nclass;
+    }
+    Arrays.sort(tempIcpt);
+
+    for (int index = 0; index < lastClass; index++) { // initialize intercept of beta values
+      intercpts[index] = tempIcpt[index];
+    }
+
+    int rowNum = (int) fr.numRows();
+    for (int iter=0; iter < numRuns; iter++) {  // for each iteration
+      for (int row = 0; row < rowNum; row++) {  // go through each row and update the gradient information
+        int yresp = (int)fr.vec(respCol).at(row); // get response class
+        Arrays.fill(multiplierI, 0.0);
+        if (yresp == 0) { // yresponse is class 0
+          multiplier = getCDF(fr, row, beta, intercpts, yresp)-1;
+          multiplierI[0] = multiplier;
+        } else if (yresp == lastClass) {  // yresponse is last class
+          multiplier = getCDF(fr, row, beta, intercpts, yresp-1);
+          multiplierI[0] = multiplier;
+        } else {  // response is between 1 and class-2
+          int pC = yresp-1;
+          double cdfC = getCDF(fr, row, beta, intercpts, yresp);
+          double cdfPC = getCDF(fr, row, beta, intercpts, pC);
+          double oneMcdfPC = 1-cdfPC;
+          oneMcdfPC = oneMcdfPC==0.0?1e-10:oneMcdfPC;
+          double oneOthreshold = 1-Math.exp(intercpts[pC]-intercpts[yresp]);
+          oneOthreshold = oneOthreshold==0.0?1e-10:oneOthreshold;
+          double oneOverThreshold = 1.0/oneOthreshold;
+          multiplier = cdfC+cdfPC-1; // for beta
+          multiplierI[0] = (cdfC-1)*oneOverThreshold/oneMcdfPC;
+          cdfC = cdfC==0.0?1e-10:cdfC;
+          multiplierI[1] = cdfPC*oneOverThreshold/cdfC;
         }
         if (multiplier != 0.0) {
           for (int predInd = 0; predInd < lastPred; predInd++) { // calculate gradient of non-intercept coefficients
@@ -299,4 +376,75 @@ public class GLMBasicTestOrdinal extends TestUtil {
       assertEquals(binomialG[index], -ordinalG[index], _tol);
     }
   }
+
+  // python version: incorrect
+  /* public void updateOrdinalCoeff3(Frame fr, int respCol, GLMModel.GLMParameters params, double[] icptPDF,
+                                 int npred, int numRuns, double[] beta, double[] intercpts) {
+    int nclass = icptPDF.length;  // number of class of response variable
+    int lastClass = nclass-1;
+    int lastPred = npred-1;
+
+    double[] betaGrad = new double[lastPred]; // store gradient calculation of non-intercepts
+    double[] icptGrad = new double[lastClass];  // store gradient calculation of intercepts
+    double multiplier = 0.0;
+    double[] multiplierI = new double[2];
+    double l2pen = params._lambda[0]*(1-params._alpha[0]);
+    double l1pen = params._lambda[0]*params._alpha[0];
+    double reg = params._obj_reg;
+    Random rng = RandomUtils.getRNG(params._seed);
+    double[] tempIcpt = new double[lastClass];
+    for (int i = 0; i < lastClass; i++) {  // only contains nclass-2 thresholds here
+      tempIcpt[i] = rng.nextDouble() * nclass;
+    }
+    Arrays.sort(tempIcpt);
+
+    for (int index = 0; index < lastClass; index++) { // initialize intercept of beta values
+      intercpts[index] = tempIcpt[index];
+    }
+
+    int rowNum = (int) fr.numRows();
+    for (int iter=0; iter < numRuns; iter++) {  // for each iteration
+      for (int row = 0; row < rowNum; row++) {  // go through each row and update the gradient information
+        int yresp = (int)fr.vec(respCol).at(row); // get response class
+        Arrays.fill(multiplierI, 0.0);
+        if (yresp == 0) { // yresponse is class 0
+          multiplier = getCDF(fr, row, beta, intercpts, yresp)-1;
+          multiplierI[0] = multiplier;
+        } else if (yresp == lastClass) {  // yresponse is last class
+          multiplier = getCDF(fr, row, beta, intercpts, yresp-1);
+          multiplierI[0] = multiplier;
+        } else {  // response is between 1 and class-2
+          int pC = yresp-1;
+          double cdfC = getCDF(fr, row, beta, intercpts, yresp);
+          double cdfPC = getCDF(fr, row, beta, intercpts, pC);
+          double oneOthreshold = 1-Math.exp(intercpts[pC]-intercpts[yresp]);
+          oneOthreshold = oneOthreshold==0.0?1e-10:oneOthreshold;
+          double oneOverThreshold = 1.0/oneOthreshold;
+          double oneOthreshold2 = 1-Math.exp(intercpts[yresp]-intercpts[pC]);
+          oneOthreshold2 = oneOthreshold2==0.0?1e-10:oneOthreshold2;
+          double oneOverThreshold2 = 1.0/oneOthreshold2;
+          multiplier = cdfC+cdfPC-1; // for beta
+          multiplierI[0] = 1-cdfC-oneOverThreshold;
+          multiplierI[1] = 1-cdfPC-oneOverThreshold2;
+        }
+        if (multiplier != 0.0) {
+          for (int predInd = 0; predInd < lastPred; predInd++) { // calculate gradient of non-intercept coefficients
+            betaGrad[predInd] += multiplier * fr.vec(predInd).at(row);
+          }
+        }
+
+        if (yresp < lastClass) {
+          icptGrad[yresp] += multiplierI[0];  // calculate gradient of intercept terms
+          if (yresp > 0) {
+            icptGrad[yresp - 1] += multiplierI[1];
+          }
+        } else {  // yresp = C-1
+          icptGrad[yresp-1] += multiplierI[0];
+        }
+      }
+      addGradChange(beta, betaGrad, intercpts, icptGrad, l2pen, l1pen, reg);
+      Arrays.fill(betaGrad, 0.0);
+      Arrays.fill(icptGrad, 0.0);
+    }
+  } */
 }

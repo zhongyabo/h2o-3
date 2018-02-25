@@ -339,6 +339,12 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
         int N = _dinfo.fullN() + 1;
         if(_parms._intercept)
           if (_parms._family == Family.ordinal) { // ordinal regression use random sorted start values
+/*            double sumPDF = 0.0;
+            int lastClass = nclasses()-1;
+            for (int ind = 0; ind < lastClass; ind++) {
+              sumPDF += _state._ymu[0];
+              _nullBeta[_dinfo.fullN()+ind*N] = -Math.log((1-sumPDF)/sumPDF)*lastClass;
+            }*/
             Random rng = RandomUtils.getRNG(_parms._seed);
             int lastClass = nclasses()-1;
             double[] tempIcpt = new double[lastClass];

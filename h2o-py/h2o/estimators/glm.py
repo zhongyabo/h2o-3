@@ -41,8 +41,9 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
                       "missing_values_handling", "compute_p_values", "remove_collinear_columns", "intercept",
                       "non_negative", "max_iterations", "objective_epsilon", "beta_epsilon", "gradient_epsilon", "link",
                       "prior", "lambda_min_ratio", "beta_constraints", "max_active_predictors", "interactions",
-                      "interaction_pairs", "balance_classes", "class_sampling_factors", "max_after_balance_size",
-                      "max_confusion_matrix_size", "max_hit_ratio_k", "max_runtime_secs", "custom_metric_func"}
+                      "interaction_pairs", "obj_reg", "balance_classes", "class_sampling_factors",
+                      "max_after_balance_size", "max_confusion_matrix_size", "max_hit_ratio_k", "max_runtime_secs",
+                      "custom_metric_func"}
         if "Lambda" in kwargs: kwargs["lambda_"] = kwargs.pop("Lambda")
         for pname, pvalue in kwargs.items():
             if pname == 'model_id':
@@ -677,6 +678,21 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     def interaction_pairs(self, interaction_pairs):
         assert_is_type(interaction_pairs, None, [tuple])
         self._parms["interaction_pairs"] = interaction_pairs
+
+
+    @property
+    def obj_reg(self):
+        """
+        Likelihood divider in objective value computation, default is 1/nobs
+
+        Type: ``float``  (default: ``-1``).
+        """
+        return self._parms.get("obj_reg")
+
+    @obj_reg.setter
+    def obj_reg(self, obj_reg):
+        assert_is_type(obj_reg, None, numeric)
+        self._parms["obj_reg"] = obj_reg
 
 
     @property

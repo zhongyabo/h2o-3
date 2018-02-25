@@ -85,6 +85,7 @@
 #'        max_active_predictors is set to 5000 otherwise it is set to 100000000. Defaults to -1.
 #' @param interactions A list of predictor column indices to interact. All pairwise combinations will be computed for the list.
 #' @param interaction_pairs A list of pairwise (first order) column interactions.
+#' @param obj_reg Likelihood divider in objective value computation, default is 1/nobs Defaults to -1.
 #' @param balance_classes \code{Logical}. Balance training data class counts via over/under-sampling (for imbalanced data). Defaults to
 #'        FALSE.
 #' @param class_sampling_factors Desired over/under-sampling ratios per class (in lexicographic order). If not specified, sampling factors will
@@ -175,6 +176,7 @@ h2o.glm <- function(x, y, training_frame,
                     max_active_predictors = -1,
                     interactions = NULL,
                     interaction_pairs = NULL,
+                    obj_reg = -1,
                     balance_classes = FALSE,
                     class_sampling_factors = NULL,
                     max_after_balance_size = 5.0,
@@ -296,6 +298,8 @@ h2o.glm <- function(x, y, training_frame,
     parms$max_active_predictors <- max_active_predictors
   if (!missing(interaction_pairs))
     parms$interaction_pairs <- interaction_pairs
+  if (!missing(obj_reg))
+    parms$obj_reg <- obj_reg
   if (!missing(balance_classes))
     parms$balance_classes <- balance_classes
   if (!missing(class_sampling_factors))
