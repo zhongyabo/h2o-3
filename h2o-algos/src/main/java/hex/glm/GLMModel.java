@@ -273,9 +273,9 @@ public class GLMModel extends Model<GLMModel,GLMModel.GLMParameters,GLMModel.GLM
       if (_family == Family.ordinal) {
         if (_intercept == false)
           glm.error("Ordinal regression", "must have intercepts.  set _intercept to true.");
-        if (_solver != Solver.AUTO)
-          glm.error("Ordinal regression","Ordinal regression only supports gradient descend.  " +
-                  "Do not set Solver or set Solver to auto.");
+        if (_solver.equals(Solver.COORDINATE_DESCENT_NAIVE) || _solver.equals(Solver.COORDINATE_DESCENT))
+          glm.error("Ordinal regression","Ordinal regression does not support gradient descend" +
+                  " COORDINATE_DESCENT or COORDINATE_DESCENT_NAIVE");
         if (_lambda_search)
           glm.error("ordinal regression", "Ordinal regression do not support lambda search.");
       }

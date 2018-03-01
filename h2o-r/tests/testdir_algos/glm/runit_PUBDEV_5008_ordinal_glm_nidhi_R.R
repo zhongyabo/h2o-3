@@ -12,7 +12,7 @@ glmOrdinal <- function() {
   Y<-"apply"
   Log.info("Build the model")
     m1 <- h2o.glm(y = Y, x = X, training_frame = D, lambda=c(0.00250), alpha=c(0.5), family = "ordinal", beta_epsilon=1e-8, 
-                objective_epsilon=1e-10, obj_reg=0.00025,max_iterations=1000 )  
+                objective_epsilon=1e-10, obj_reg=0.00025,max_iterations=1000, solver='IRLSM')  
     predh2o = as.data.frame(h2o.predict(m1,D))
     Ddata <- as.data.frame(D)
     confusionH2O <- table(Ddata$apply, predh2o$predict)

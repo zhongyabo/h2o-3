@@ -972,10 +972,14 @@ public abstract class GLMTask  {
           continue;
         }
         int y = (int) ys[i];
-        double logSumExp = computeMultinomialEtas(etas[i], exps);
-        _likelihood -= w * (etas[i][y] - logSumExp);
-        for (int c = 0; c < K; ++c)
-          etas[i][c] = w * (exps[c + 1] - (y == c ? 1 : 0));
+        if (_link.equals(Link.ologit)) {
+
+        }else { // for multinomial calculation
+          double logSumExp = computeMultinomialEtas(etas[i], exps);
+          _likelihood -= w * (etas[i][y] - logSumExp);
+          for (int c = 0; c < K; ++c)
+            etas[i][c] = w * (exps[c + 1] - (y == c ? 1 : 0));
+        }
       }
     }
 
@@ -1008,7 +1012,7 @@ public abstract class GLMTask  {
       int [] ids = MemoryManager.malloc4(M);
       computeCategoricalEtas(chks,etas,vals,ids);
       computeNumericEtas(chks,etas,vals,ids);
-      if (_link == Link.ologit)  // gradient is stored in etas
+      if (_glmp != null  && _link == Link.ologit && _glmp._solver == GLMParameters.Solver.AUTO)  // gradient is stored in etas
         computeGradientMultipliers(etas, etasOffset, response.getDoubles(vals, 0, M), ws);
        else
         computeGradientMultipliers(etas, response.getDoubles(vals, 0, M), ws);
@@ -1018,7 +1022,7 @@ public abstract class GLMTask  {
 
       double [] g = _gradient[P-1]; // get the intercept gradient.
       // sum up the gradient over the data rows in this chk[]
-      if (_link == Link.ologit) {
+      if (_glmp != null && _link == Link.ologit && _glmp._solver == GLMParameters.Solver.AUTO) {
         for (int i = 0; i < etasOffset.length; ++i)
           ArrayUtils.add(g, etasOffset[i]);
       } else {
