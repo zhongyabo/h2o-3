@@ -18,6 +18,10 @@ def call(final pipelineContext) {
   // Job will execute PR_STAGES only if these are green.
   def SMOKE_STAGES = [
     [
+      stageName: 'Java 8 JUnit', target: 'test-junit-jenkins', pythonVersion: '2.7',
+      timeoutValue: 90, component: pipelineContext.getBuildConfig().COMPONENT_JAVA, additionalTestPackages: [pipelineContext.getBuildConfig().COMPONENT_PY]
+    ],
+    [
       stageName: 'Py2.7 Smoke', target: 'test-py-smoke', pythonVersion: '2.7',timeoutValue: 8,
       component: pipelineContext.getBuildConfig().COMPONENT_PY
     ],
