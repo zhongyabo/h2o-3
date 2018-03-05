@@ -1157,10 +1157,11 @@ def generate_response_glm(weight, x_mat, noise_std, family_type, class_method='p
             for indP in range(num_sample):
                 tresp.append(-response_y[indP,0])
             tresp.sort()
-            num_per_class = len(tresp)/lastClass
+            num_per_class = int(len(tresp)/lastClass)
+            half_offset = int(num_per_class/2)
 
             for indC in range(lastClass):   # put in threshold
-                weight[0,indC] = tresp[indC*num_per_class]
+                weight[0,indC] = tresp[(indC+1)*num_per_class-half_offset]
             response_y = x_mat * weight + noise_std * np.random.standard_normal([num_row, 1])
 
         discrete_y = np.zeros((num_sample, 1), dtype=np.int)
@@ -3234,3 +3235,22 @@ def compare_frames_local(f1, f2, prob=0.5, tol=1e-6):
                     diff = abs(v1-v2)/max(1.0, abs(v1), abs(v2))
                     assert diff<=tol, "Failed frame values check at row {2} and column {3}! frame1 value: {0}, frame2 value: " \
                                       "{1}".format(v1, v2, rowInd, colInd)
+
+def calAcc_frames_local(f1, f2):
+    temp1 = f1.as_data_frame(use_pandas=False)
+    temp2 = f2.as_data_frame(use_pandas=False)
+    assert (f1.nrow==f2.nrow), "The two frames are of different sizes."
+    acc = 0
+    colInd = 0
+    for rowInd in range(1,f2.nrow):
+        if (math.isnan(float(temp1[rowInd][colInd]))):
+            assert math.isnan(float(temp2[rowInd][colInd])), "Failed frame values check at row {2}! " \
+                                                             "frame1 value: {0}, frame2 value: " \
+                                                             "{1}".format(temp1[rowInd][colInd], temp2[rowInd][colInd], rowInd)
+        else:
+            v1 = int(temp1[rowInd][colInd])
+            v2 = int(temp2[rowInd][colInd])
+            if (v1==v2):
+                acc = acc+1
+    return (acc*1.0/f1.nrow)
+
