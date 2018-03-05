@@ -343,7 +343,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
             int lastClass = nclasses()-1;
             double[] tempIcpt = new double[lastClass];
             for (int i = 0; i < lastClass; i++) {  // only contains nclass-2 thresholds here
-              tempIcpt[i] = rng.nextDouble() * nclasses();
+              tempIcpt[i] = (-1+2*rng.nextDouble()) * nclasses(); // generate threshold from -nclasses to +nclasses
             }
             Arrays.sort(tempIcpt);
 
