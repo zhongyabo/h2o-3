@@ -1170,6 +1170,7 @@ def generate_response_glm(weight, x_mat, noise_std, family_type, class_method='p
             for indC in range(lastClass):
                 if (response_y[indR, indC] >= 0):
                     discrete_y[indR, 0] = indC
+                    break
         return discrete_y
 
     # added more to form Multinomial response
