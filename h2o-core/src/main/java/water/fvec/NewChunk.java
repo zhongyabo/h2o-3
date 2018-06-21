@@ -1167,17 +1167,17 @@ public class NewChunk extends Chunk {
     // See if we can sanely normalize all the data to the same fixed-point.
     int  xmin = Integer.MAX_VALUE;   // min exponent found
     boolean floatOverflow = false;
-    boolean fitLong = true;
     double min = Double.POSITIVE_INFINITY;
     double max = Double.NEGATIVE_INFINITY;
-    BigInteger MAX = BigInteger.valueOf(Long.MAX_VALUE);
-    BigInteger MIN = BigInteger.valueOf(Long.MIN_VALUE);
-    BigInteger min_l = MAX.multiply(MAX);
-    BigInteger max_l = BigInteger.valueOf(-1L).multiply(MAX.multiply(MAX));
+   // BigInteger MAX = BigInteger.valueOf(Long.MAX_VALUE);
+   // BigInteger MIN = BigInteger.valueOf(Long.MIN_VALUE);
+    long min_l = Long.MAX_VALUE;
+    long max_l = Long.MIN_VALUE;
     int p10iLength = PrettyPrint.powers10i.length;
     long llo=Long   .MAX_VALUE, lhi=Long   .MIN_VALUE;
     int  xlo=Integer.MAX_VALUE, xhi=Integer.MIN_VALUE;
     boolean hasZero = sparse;
+    boolean fitLong = _xs==null;  // null for integers/longs/binary
     for(int i = 0; i< _sparseLen; i++ ) {
       if( isNA2(i) ) continue;
       long l = _ms.get(i);
@@ -1185,31 +1185,25 @@ public class NewChunk extends Chunk {
       if( x==Integer.MIN_VALUE) x=0; // Replace categorical flag with no scaling
       assert l!=0 || x==0:"l == 0 while x = " + x + " ms = " + _ms.toString();      // Exponent of zero is always zero
       long t;                   // Remove extra scaling
+      long ll = l;  // store l before it is scaled
       while( l!=0 && (t=l/10)*10==l ) { l=t; x++; }
-      BigInteger ll = BigInteger.valueOf(l).multiply(pow10bi(x));
       // Compute per-chunk min/max
       double d = PrettyPrint.pow10(l,x);  // WARNING: this is lossy!!
       if(d == 0) {
         hasZero = true;
         continue;
       }
-      if (fitLong)  // once set to false don't want to reset back to true
-        fitLong = ll.compareTo(MAX)<=0 && ll.compareTo(MIN)>=0;
 
-      if ((x >=0) && ((long)d != ll.longValue()) && fitLong)  { // use long if integer and fit inside long format
-        if( ll.compareTo(min_l)==-1 ) { min=d; min_l=ll; llo=l; xlo=x; } //
-        if( ll.compareTo(max_l)== 1 ) { max=d; max_l=ll; lhi=l; xhi=x; }
+      if ((x >=0) && fitLong)  { // use long if integer and fit inside long format
+        if( ll < min_l ) { min=d; min_l=ll; llo=l; xlo=x; } //
+        if( ll > max_l ) { max=d; max_l=ll; lhi=l; xhi=x; }
       } else {
         if( d < min ) {
           min = d;
-          if( ll.compareTo(min_l)==-1 )
-            min_l=ll;
           llo=l; xlo=x;
         }
         if( d > max ) {
           max = d;
-          if( ll.compareTo(max_l)== 1 )
-            max_l=ll;
           lhi=l; xhi=x;
         }
       }
@@ -1221,14 +1215,14 @@ public class NewChunk extends Chunk {
                          max != Double.NEGATIVE_INFINITY;
 
     if(hasZero){ // sparse?  then compare vs implied 0s
-      if( min > 0 ) { min = 0; llo=0; min_l=BigInteger.ZERO; }
-      if( max < 0 ) { max = 0; lhi=0; max_l=BigInteger.ZERO; }
+      if( min > 0 ) { min = 0; llo=0; min_l=0l; }
+      if( max < 0 ) { max = 0; lhi=0; max_l=0l; }
     }
     if(!hasNonZero) xlo = xhi = xmin = 0;
 
     // Constant column?
-    if( _naCnt==0 && (min_l.compareTo(max_l)==0) && xmin >=0 && fitLong) {
-      return new C0LChunk(min_l.longValue(), _len);
+    if( _naCnt==0 && (min_l==max_l) && xmin >=0 && fitLong) {
+      return new C0LChunk(min_l, _len);
     }
     if( _naCnt==0 && (min==max) && (xmin<0 || !fitLong) ) {
       return new C0DChunk(min, _len);
@@ -1252,7 +1246,7 @@ public class NewChunk extends Chunk {
 
     // put min_l in xmin scale
     if( xmin > 0 )
-      min_l = min_l.divide(BigInteger.valueOf(PrettyPrint.pow10i(xmin)));
+      min_l = min_l/PrettyPrint.pow10i(xmin);
 
     // Boolean column?
     if (max == 1 && min == 0 && xmin == 0 && !overflow) {
@@ -1322,7 +1316,7 @@ public class NewChunk extends Chunk {
     if( leRange < 255 ) {    // Span fits in a byte?
       if(0 <= min && max < 255 ) // Span fits in an unbiased byte?
         return new C1Chunk( bufX(0,0,C1Chunk._OFF,0));
-      return new C1SChunk( bufX(min_l.longValue(),xmin,C1SChunk._OFF,0),min_l.longValue(),xmin);
+      return new C1SChunk( bufX(min_l,xmin,C1SChunk._OFF,0),min_l,xmin);
     }
 
     // Compress column into a short
