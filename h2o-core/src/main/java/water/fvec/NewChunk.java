@@ -1177,7 +1177,7 @@ public class NewChunk extends Chunk {
     long llo=Long   .MAX_VALUE, lhi=Long   .MIN_VALUE;
     int  xlo=Integer.MAX_VALUE, xhi=Integer.MIN_VALUE;
     boolean hasZero = sparse;
-    boolean fitLong = _xs==null;  // null for integers/longs/binary
+    boolean fitLong = (_ds==null &&_xs._vals1==null && _xs._vals4==null) || (_ds!=null && isInteger);  // null for integers/longs/binary
     for(int i = 0; i< _sparseLen; i++ ) {
       if( isNA2(i) ) continue;
       long l = _ms.get(i);
