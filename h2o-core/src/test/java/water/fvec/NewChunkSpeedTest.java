@@ -19,7 +19,7 @@ public class NewChunkSpeedTest extends TestUtil {
   int rowNumber = 1000000;
   int rowInterval = 1000;
   double tolerance = 1e-10;
-  int numberLoops=1;
+  int numberLoops=2;
 
   @Test public void testParseDoublesConst(){
     double startTime = System.currentTimeMillis();
@@ -93,6 +93,7 @@ public class NewChunkSpeedTest extends TestUtil {
     for (int index=0; index<numberLoops; index++)
       testsForLongs(false);
     double endTime = (System.currentTimeMillis()-startTime)*0.001;  // change time to seconds
+    Log.info("************************************************");
     Log.info("New Chunk test for longs:", " time(s) taken for "+numberLoops+" is "+endTime);
   }
 
@@ -104,20 +105,27 @@ public class NewChunkSpeedTest extends TestUtil {
     Log.info("New Chunk test for constant longs:", " time(s) taken for "+numberLoops+" is "+endTime);
   }
 
-  @Test public void testParseDataFromFiles(){
-    Scope.enter();
-    String[] filenames = new String[] {"smalldata/jira/floatVals.csv", "smalldata/jira/integerVals.csv",
+  @Test
+  public void testParseDataFromFiles() {
+    String[] filenames = new String[]{"smalldata/jira/floatVals.csv", "smalldata/jira/integerVals.csv",
             "smalldata/jira/longVals.csv", "smalldata/jira/doubleVals.csv", "smalldata/jira/bigDoubleVals.csv"};
-    Frame f;
-    int numLoops = 5*numberLoops;
-    for (int index=4; index<filenames.length; index++) {
+    int numLoops = 5 * numberLoops;
+
+    for (int index = 0; index < filenames.length; index++) {
       double startTime = System.currentTimeMillis();
-      for (int loop=0; loop < numLoops; loop++) {
-        f = parse_test_file(filenames[index]);
-        assertTrue(f.numRows()==100000);
+      for (int loop = 0; loop < numLoops; loop++) {
+        Scope.enter();
+        try {
+          Frame f = parse_test_file(filenames[index]);
+          assertTrue(f.numRows() == 100000);
+          Scope.track(f);
+        } finally {
+          Scope.exit();
+        }
       }
       double endTime = (System.currentTimeMillis() - startTime) * 0.001;  // change time to seconds
-      Log.info("Parsing: "+filenames[index]+ " time(s) taken for " + numLoops + " loops is " + endTime);
+      Log.info("*******************************************************");
+      Log.info("Parsing: " + filenames[index] + " time(s) taken for " + numLoops + " loops is " + endTime);
     }
   }
 
