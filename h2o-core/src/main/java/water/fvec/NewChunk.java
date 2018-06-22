@@ -9,7 +9,6 @@ import water.util.PrettyPrint;
 import water.util.StringUtils;
 import water.util.UnsafeUtils;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -1054,13 +1053,6 @@ public class NewChunk extends Chunk {
       return Long.MAX_VALUE; // if overflow return 64 as the max possible value
     long res = lemax - lemin;
     return res < 0 ? 0 /*happens for rare FP roundoff computation of min & max */: res;
-  }
-
-  private static BigInteger pow10bi(int x) {
-    BigInteger v = BigInteger.ONE;
-    while(x-->0)
-      v = v.multiply(BigInteger.TEN);
-    return v;
   }
 
   private Chunk compress2() {
