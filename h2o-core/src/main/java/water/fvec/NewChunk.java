@@ -1168,8 +1168,10 @@ public class NewChunk extends Chunk {
     int p10iLength = PrettyPrint.powers10i.length;
     long llo=Long   .MAX_VALUE, lhi=Long   .MIN_VALUE;
     int  xlo=Integer.MAX_VALUE, xhi=Integer.MIN_VALUE;
+    double longMax = (double) Long.MAX_VALUE;
+    double longMin = (double) Long.MIN_VALUE;
     boolean hasZero = sparse;
-    boolean fitLong = (_ds==null &&_xs._vals1==null && _xs._vals4==null) || (_ds!=null && isInteger);  // null for integers/longs/binary
+    boolean fitLong = true;  // null for integers/longs/binary
     for(int i = 0; i< _sparseLen; i++ ) {
       if( isNA2(i) ) continue;
       long l = _ms.get(i);
@@ -1185,6 +1187,9 @@ public class NewChunk extends Chunk {
         hasZero = true;
         continue;
       }
+
+      if (fitLong)
+        fitLong = (x>=0) && (d <= longMax) && (d >= longMin);
 
       if ((x >=0) && ((long)d!=ll) && fitLong)  { // use long if integer and fit inside long format
         if( ll < min_l ) { min=d; min_l=ll; llo=l; xlo=x; } //
