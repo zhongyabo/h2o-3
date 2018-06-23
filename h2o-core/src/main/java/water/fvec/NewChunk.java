@@ -1192,10 +1192,12 @@ public class NewChunk extends Chunk {
       } else {
         if( d < min ) {
           min = d;
+          min_l = ll;
           llo=l; xlo=x;
         }
         if( d > max ) {
           max = d;
+          max_l = ll;
           lhi=l; xhi=x;
         }
       }
@@ -1237,7 +1239,7 @@ public class NewChunk extends Chunk {
     final long leRange = leRange(lemin,lemax);
 
     // put min_l in xmin scale
-    if( xmin > 0 && fitLong)
+    if( xmin > 0 )
       min_l = min_l/PrettyPrint.pow10i(xmin);
 
     // Boolean column?
