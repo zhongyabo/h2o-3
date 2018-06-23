@@ -1186,18 +1186,20 @@ public class NewChunk extends Chunk {
         continue;
       }
 
-      if ((x >=0) && fitLong)  { // use long if integer and fit inside long format
+      if ((x >=0) && ((long)d!=ll) && fitLong)  { // use long if integer and fit inside long format
         if( ll < min_l ) { min=d; min_l=ll; llo=l; xlo=x; } //
         if( ll > max_l ) { max=d; max_l=ll; lhi=l; xhi=x; }
       } else {
         if( d < min ) {
           min = d;
-          min_l = ll;
+          if (ll < min_l)
+            min_l = ll;
           llo=l; xlo=x;
         }
         if( d > max ) {
           max = d;
-          max_l = ll;
+          if (ll > max_l)
+            max_l = ll;
           lhi=l; xhi=x;
         }
       }
