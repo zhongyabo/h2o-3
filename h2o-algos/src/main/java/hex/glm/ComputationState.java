@@ -71,7 +71,7 @@ public final class ComputationState {
     // NOTE: we start with lambdaOld being 0, not lambda_max
     // non-recursive strong rules should use lambdaMax instead of _lambda
     // However, it seems tobe working nicely to use 0 instead and be more aggressive on the predictor pruning
-    // (shoudl be safe as we check the KKTs anyways)
+    // (should be safe as we check the KKTs anyways)
     applyStrongRules(lambda, _lambda);
     _lambda = lambda;
     _gslvr = new GLMGradientSolver(_job,_parms,_activeData,l2pen(),_activeBC);
@@ -576,7 +576,7 @@ public final class ComputationState {
         for(int i = 0; i < grads.length; ++i)
           grads[i] = xy[i] - ArrayUtils.innerProduct(xx[i], beta) + xx[i][i] * beta[i];
       }
-      if(newCols != null) {
+      if(newCols != null) { // only need to update grads for newCols and not all columns
         double [][] xx = gram.getXX();
         for (int i : newCols)
           grads[i] = xy[i] - ArrayUtils.innerProduct(xx[i], beta) + xx[i][i] * beta[i];
@@ -641,7 +641,7 @@ public final class ComputationState {
       res = new ComputationState.GramXY(gt._gram,ArrayUtils.removeIds(gt._xy, zeros),null,gt._beta == null?null:ArrayUtils.removeIds(gt._beta, zeros),activeData().activeCols(),null,gt._yy,gt._likelihood);
     } else res = new GramXY(gt._gram,gt._xy,null,beta == null?null:beta,activeCols,null,gt._yy,gt._likelihood);
     if(s == GLMParameters.Solver.COORDINATE_DESCENT) {
-      res.gram.getXX();
+      res.gram.getXX(); // todo:  this is not used anywhere?
     }
     return res;
   }
