@@ -662,6 +662,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
           ComputationState.GramXY gram = _state.computeGram(ls.getX(),s);
           long t3 = System.currentTimeMillis();
           double [] betaCnd = s == Solver.COORDINATE_DESCENT?COD_solve(gram,_state._alpha,_state.lambda()):ADMM_solve(gram.gram,gram.xy);
+
           long t4 = System.currentTimeMillis();
           if (!onlyIcpt && !ls.evaluate(ArrayUtils.subtract(betaCnd, ls.getX(), betaCnd))) {
             Log.info(LogMsg("Ls failed " + ls));
@@ -1489,6 +1490,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
     Log.info(LogMsg("COD done after " + iter1 + " iterations and " + tdelta + "ms") + ", main loop took " + (tend-t2) + "ms, overall COD time = " + (COD_time += tdelta));
     return beta;
   }
+
   /**
    * Created by tomasnykodym on 3/30/15.
    */
