@@ -680,7 +680,9 @@ class BinaryMerge extends DTask<BinaryMerge> {
           long a = resultLoc + rep;
           // TODO: loop into batches to save / and % for each repeat and still
           // cater for crossing multiple batch boundaries
-          int whichChunk = (int) (a / batchSizeUUID);  
+          int whichChunk = (int) (a / batchSizeUUID);
+          if (whichChunk != jb)
+            System.out.println("Fracked");
           int offset = (int) (a % batchSizeUUID);
 
           for (int col=0; col<chks.length; col++) { // copy over left frame to frameLikeChunks
@@ -703,6 +705,13 @@ class BinaryMerge extends DTask<BinaryMerge> {
             int toOffset = (int) (resultLoc % batchSizeUUID);
             int fromChunk = (int) ((resultLoc - l) / batchSizeUUID);
             int fromOffset = (int) ((resultLoc - l) % batchSizeUUID);
+            if (toChunk != jb)
+              System.out.println("Fracked.");
+
+            if (fromChunk != jb)
+              System.out.println("Fracked.");
+
+
             for (int col=0; col<numColsInResult-numLeftCols; col++) {
               int colIndex = numLeftCols + col;
               if (this._stringCols[colIndex]) {
