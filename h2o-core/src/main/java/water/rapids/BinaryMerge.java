@@ -181,7 +181,7 @@ class BinaryMerge extends DTask<BinaryMerge> {
     long retSize = leftTo - _leftFrom - 1;   // since leftTo and leftFrom are 1 outside the extremes
     assert retSize >= 0;
     if (retSize==0) { tryComplete(); return; } // nothing can match, even when allLeft
-    _retBatchSize = 268435456;    // 2^31 / 8 since Java arrays are limited to 2^31 bytes
+    _retBatchSize = 10000;    // 2^31 / 8 since Java arrays are limited to 2^31 bytes
     int retNBatch = (int)((retSize - 1) / _retBatchSize + 1);
     int retLastSize = (int)(retSize - (retNBatch - 1) * _retBatchSize);
 
@@ -251,7 +251,7 @@ class BinaryMerge extends DTask<BinaryMerge> {
     long at8order( long idx ) { return _order[(int)(idx / _batchSize)][(int)(idx % _batchSize)]; }
 
     long[][] fillPerNodeRows( int i ) {
-      final int batchSizeLong = 256*1024*1024 / 16;  // 256GB DKV limit / sizeof(UUID)
+      final int batchSizeLong = 10000;  // 256GB DKV limit / sizeof(UUID)
       if( _perNodeNumRowsToFetch[i] <= 0 ) return null;
       int nbatch  = (int) ((_perNodeNumRowsToFetch[i] - 1) / batchSizeLong + 1);  // TODO: wrap in class to avoid this boiler plate
       assert nbatch >= 1;
@@ -514,7 +514,7 @@ class BinaryMerge extends DTask<BinaryMerge> {
     // Create the chunks for the final frame from this MSB pair.
     
     // 16 bytes for each UUID (biggest type). Enum will be long (8). TODO: How is non-Enum 'string' handled by H2O?
-    final int batchSizeUUID = 256*1024*1024 / 16;  // number of rows per chunk to fit in 256GB DKV limit.
+    final int batchSizeUUID = 10000;  // number of rows per chunk to fit in 256GB DKV limit.
     final int nbatch = (int) ((_numRowsInResult-1)/batchSizeUUID +1);  // TODO: wrap in class to avoid this boiler plate
     assert nbatch >= 1;
     final int lastSize = (int) (_numRowsInResult - (nbatch-1)*batchSizeUUID);
@@ -559,7 +559,7 @@ class BinaryMerge extends DTask<BinaryMerge> {
   // Loop over _ret1st and _retLen and populate the batched requests for
   // each node helper.  _ret1st and _retLen are the same shape
   private void chunksPopulatePerNode( final long perNodeLeftLoc[], final long perNodeLeftRows[][][], final long perNodeRightLoc[], final long perNodeRightRows[][][] ) {
-    final int batchSizeLong = 256*1024*1024 / 16;  // 256GB DKV limit / sizeof(UUID)
+    final int batchSizeLong = 10000;  // 256GB DKV limit / sizeof(UUID)
     long prevf = -1, prevl = -1;
     // TODO: hop back to original order here for [] syntax.
     long leftLoc=_leftFrom;  // sweep through left table along the sorted row locations.  
@@ -649,7 +649,7 @@ class BinaryMerge extends DTask<BinaryMerge> {
   private void chunksPopulateRetFirst(final int numColsInResult, final int numLeftCols, final long perNodeLeftLoc[], final GetRawRemoteRows grrrsLeft[][], final long perNodeRightLoc[], final GetRawRemoteRows grrrsRite[][], final double[][][] frameLikeChunks, BufferedString[][][] frameLikeChunks4String) {
     // 16 bytes for each UUID (biggest type). Enum will be long (8). 
     // TODO: How is non-Enum 'string' handled by H2O?
-    final int batchSizeUUID = 256*1024*1024 / 16;  // number of rows per chunk to fit in 256GB DKV limit.
+    final int batchSizeUUID = 10000;  // number of rows per chunk to fit in 256GB DKV limit.
     long resultLoc=0;   // sweep upwards through the final result, filling it in
     // TODO: hop back to original order here for [] syntax.
     long leftLoc=_leftFrom; // sweep through left table along the sorted row locations.  
