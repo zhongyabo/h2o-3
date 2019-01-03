@@ -35,3 +35,7 @@ Reproducibility
     :alt: Leader node in cluster status
 
  **Note**: In H2O versions prior to 3.18.0.1, the node automatically returned by the h2odriver while running on Hadoop was not guaranteed to be the leader node.  If you are using a version prior to 3.18.0.1 and you are running H2O on Hadoop, the leader node has to be manually identified by the user for reproducibility.
+
+.. Floating point problems - precision vs. accuracy, roundoff error, statistical error
+.. Role in map-reduce computation - operation order,  
+.. Role in GBM - scoring intervals and early stopping, creating histograms
