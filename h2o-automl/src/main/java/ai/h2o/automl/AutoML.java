@@ -242,7 +242,7 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
   private void performAutoFeatureEngineering() {
     String responseColumnName = this.trainingFrame.name(this.trainingFrame.find(this.responseColumn)); // Question: can we add .name(Vec vec) to Frame's API?
 
-    // Hardcoded default startegy for now
+    // Hardcoded default strategy for now
     TEApplicationStrategy defaultTEApplicationStrategy = new AllCategoricalTEApplicationStrategy(this.trainingFrame, responseColumnName);
     performAutoTargetEncoding(defaultTEApplicationStrategy);
   }
@@ -257,7 +257,7 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
       BlendingParams blendingParams = new BlendingParams(5, 1);
       boolean withBlendedAvg = true;
       boolean imputeNAsWithNewCategory = true;
-      int seed = 1234; // TODO make it a parameter for users to set
+      long seed = buildSpec.build_control.stopping_criteria.seed(); // TODO make it a dedicated parameter for users to set
       byte holdoutType = TargetEncoder.DataLeakageHandlingStrategy.KFold;
 
       TargetEncoder tec = new TargetEncoder(columnsToEncode, blendingParams);
@@ -270,21 +270,49 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
       switch (holdoutType) {
         case TargetEncoder.DataLeakageHandlingStrategy.KFold:
           
-          Frame tmpFrame = tec.applyTargetEncoding(trainingFrame, responseColumnName, encodingMap, holdoutType, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
-          this.trainingFrame.delete();
-          this.trainingFrame = tmpFrame;
-          DKV.put(this.trainingFrame);
-          
-          if(this.validationFrame != null)
-            this.validationFrame = tec.applyTargetEncoding(getValidationFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
-          if(this.leaderboardFrame != null)
-            this.leaderboardFrame = tec.applyTargetEncoding(getLeaderboardFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
+          Frame encodedTrainingFrame = tec.applyTargetEncoding(trainingFrame, responseColumnName, encodingMap, holdoutType, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
+          copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedTrainingFrame, this.trainingFrame);
+
+          if(this.validationFrame != null) {
+            Frame encodedValidationFrame = tec.applyTargetEncoding(getValidationFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
+            copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedValidationFrame, this.validationFrame);
+          }
+          if(this.leaderboardFrame != null) {
+            Frame encodedLeaderboardFrame = tec.applyTargetEncoding(getLeaderboardFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
+            copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedLeaderboardFrame, this.leaderboardFrame);
+          }
           break;
         case TargetEncoder.DataLeakageHandlingStrategy.LeaveOneOut:
-          //TODO
+          Frame encodedTrainingFrameLOO = tec.applyTargetEncoding(trainingFrame, responseColumnName, encodingMap, holdoutType, withBlendedAvg,  imputeNAsWithNewCategory,seed);
+          copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedTrainingFrameLOO, this.trainingFrame);
+
+          // TODO: it is a duplicate to KFold's transformations. Consider to refactor.
+          if(this.validationFrame != null) {
+            Frame encodedValidationFrame = tec.applyTargetEncoding(getValidationFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
+            copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedValidationFrame, this.validationFrame);
+          }
+          if(this.leaderboardFrame != null) {
+            Frame encodedLeaderboardFrame = tec.applyTargetEncoding(getLeaderboardFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
+            copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedLeaderboardFrame, this.leaderboardFrame);
+          }
+          break;
+        case TargetEncoder.DataLeakageHandlingStrategy.None:
       }
       encodingMapCleanUp(encodingMap);
     }
+  }
+
+  //Note: we could have avoided this if we were following mutable way in TargetEncoder
+  private void copyEncodedColumnsToDestinationFrame(String[] columnsToEncode, Frame encodedFrame, Frame destinationFrame) {
+    for(String column :columnsToEncode) {
+      String encodedColumnName = column + "_te";
+      Vec encodedVec = encodedFrame.vec(encodedColumnName);
+      Vec encodedVecCopy = encodedVec.makeCopy();
+      destinationFrame.add(encodedColumnName, encodedVecCopy); 
+      encodedVec.remove();
+      encodedVecCopy.remove();
+    }
+    encodedFrame.delete();
   }
 
   private void encodingMapCleanUp(Map<String, Frame> encodingMap) {
@@ -359,16 +387,12 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
   }
 
 
-  private void optionallySplitLeaderboardDataset() {
-    // If nfolds = 0 and leaderboard frame is not supplied, we need to create one
-    // We do a 90/10 split of the training frame
+  private void ifNecessaryTakeSplitFromTrainingFrameToSetupLeaderbord() {
     if (this.buildSpec.build_control.nfolds == 0) {
         if (null == this.leaderboardFrame) {
-          Frame[] splits = ShuffleSplitFrame.shuffleSplitFrame(origTrainingFrame,
-                  new Key[] { Key.make("automl_training_" + origTrainingFrame._key),
-                          Key.make("automl_leaderboard_" + origTrainingFrame._key)},
-                  new double[] { 0.9, 0.1 },
-                  buildSpec.build_control.stopping_criteria.seed());
+          double[] splitRatio = {0.9, 0.1};
+          Key[] keysForSplits = {Key.make("automl_training_" + origTrainingFrame._key), Key.make("automl_leaderboard_" + origTrainingFrame._key)};
+          Frame[] splits = ShuffleSplitFrame.shuffleSplitFrame(origTrainingFrame, keysForSplits, splitRatio, buildSpec.build_control.stopping_criteria.seed());
           this.trainingFrame = splits[0];
           this.leaderboardFrame = splits[1];
           this.didValidationSplit = false;
@@ -382,53 +406,36 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
     }
 
   private void handleDatafileParameters(AutoMLBuildSpec buildSpec) {
+    initializeFramesFromBuildSpec(buildSpec);
+
+    validateDatafileParameters(buildSpec);
+
+    setupTrainingFrameAndItsDerivatives(origTrainingFrame, buildSpec);
+
+    provideUserFeedbackBasedOnDatafileParameters(buildSpec);
+
+    if (verifyImmutability) saveStateForSubsequentCheckOfImmutability();
+    
+    DKV.put(this);
+  }
+
+  private void initializeFramesFromBuildSpec(AutoMLBuildSpec buildSpec) {
     this.origTrainingFrame = DKV.getGet(buildSpec.input_spec.training_frame);
     this.validationFrame = DKV.getGet(buildSpec.input_spec.validation_frame);
     this.leaderboardFrame = DKV.getGet(buildSpec.input_spec.leaderboard_frame);
+  }
 
-    if (null == this.origTrainingFrame)
-      throw new H2OIllegalArgumentException("No training data has been specified, either as a path or a key.");
+  private void saveStateForSubsequentCheckOfImmutability() {
+    // check that we haven't messed up the original Frame
+    originalTrainingFrameVecs = origTrainingFrame.vecs().clone();
+    originalTrainingFrameNames = origTrainingFrame.names().clone();
+    originalTrainingFrameChecksums = new long[originalTrainingFrameVecs.length];
 
+    for (int i = 0; i < originalTrainingFrameVecs.length; i++)
+      originalTrainingFrameChecksums[i] = originalTrainingFrameVecs[i].checksum();
+  }
 
-    if (this.origTrainingFrame.find(buildSpec.input_spec.response_column) == -1) {
-      throw new H2OIllegalArgumentException("Response column '" + buildSpec.input_spec.response_column + "' is not in " +
-              "the training frame.");
-    }
-
-    if (this.validationFrame != null && this.validationFrame.find(buildSpec.input_spec.response_column) == -1) {
-      throw new H2OIllegalArgumentException("Response column '" + buildSpec.input_spec.response_column + "' is not in " +
-              "the validation frame.");
-    }
-
-    if (this.leaderboardFrame != null && this.leaderboardFrame.find(buildSpec.input_spec.response_column) == -1) {
-      throw new H2OIllegalArgumentException("Response column '" + buildSpec.input_spec.response_column + "' is not in " +
-              "the leaderboard frame.");
-    }
-
-    if (buildSpec.input_spec.fold_column != null && this.origTrainingFrame.find(buildSpec.input_spec.fold_column) == -1) {
-      throw new H2OIllegalArgumentException("Fold column '" + buildSpec.input_spec.fold_column + "' is not in " +
-              "the training frame.");
-    }
-    if (buildSpec.input_spec.weights_column != null && this.origTrainingFrame.find(buildSpec.input_spec.weights_column) == -1) {
-      throw new H2OIllegalArgumentException("Weights column '" + buildSpec.input_spec.weights_column + "' is not in " +
-              "the training frame.");
-    }
-
-    optionallySplitLeaderboardDataset();
-
-    if (null == this.trainingFrame) {
-      // when nfolds>0, let trainingFrame be the original frame
-      // but cloning to keep an internal ref just in case the original ref gets deleted from client side
-      // (can occur in some corner cases with Python GC for example if frame get's out of scope during an AutoML rerun)
-      this.trainingFrame = new Frame(origTrainingFrame);
-      this.trainingFrame._key = Key.make("automl_training_" + origTrainingFrame._key);
-      DKV.put(this.trainingFrame);
-    }
-
-    this.responseColumn = trainingFrame.vec(buildSpec.input_spec.response_column);
-    this.foldColumn = trainingFrame.vec(buildSpec.input_spec.fold_column);
-    this.weightsColumn = trainingFrame.vec(buildSpec.input_spec.weights_column);
-
+  private void provideUserFeedbackBasedOnDatafileParameters(AutoMLBuildSpec buildSpec) {
     this.userFeedback.info(Stage.DataImport, "training frame: " + this.trainingFrame.toString().replace("\n", " ") + " checksum: " + this.trainingFrame.checksum());
     if (null != this.validationFrame) {
       this.userFeedback.info(Stage.DataImport, "validation frame: " + this.validationFrame.toString().replace("\n", " ") + " checksum: " + this.validationFrame.checksum());
@@ -444,17 +451,61 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
     this.userFeedback.info(Stage.DataImport, "response column: " + buildSpec.input_spec.response_column);
     this.userFeedback.info(Stage.DataImport, "fold column: " + this.foldColumn);
     this.userFeedback.info(Stage.DataImport, "weights column: " + this.weightsColumn);
+  }
 
-    if (verifyImmutability) {
-      // check that we haven't messed up the original Frame
-      originalTrainingFrameVecs = origTrainingFrame.vecs().clone();
-      originalTrainingFrameNames = origTrainingFrame.names().clone();
-      originalTrainingFrameChecksums = new long[originalTrainingFrameVecs.length];
+  private void validateDatafileParameters(AutoMLBuildSpec buildSpec) {
+    if (null == this.origTrainingFrame)
+      throw new H2OIllegalArgumentException("No training data has been specified, either as a path or a key.");
 
-      for (int i = 0; i < originalTrainingFrameVecs.length; i++)
-        originalTrainingFrameChecksums[i] = originalTrainingFrameVecs[i].checksum();
+    validateFramesForResponseColumn(buildSpec);
+
+    if (buildSpec.input_spec.fold_column != null && this.origTrainingFrame.find(buildSpec.input_spec.fold_column) == -1) {
+      throw new H2OIllegalArgumentException("Fold column '" + buildSpec.input_spec.fold_column + "' is not in " +
+              "the training frame.");
     }
-    DKV.put(this);
+    if (buildSpec.input_spec.weights_column != null && this.origTrainingFrame.find(buildSpec.input_spec.weights_column) == -1) {
+      throw new H2OIllegalArgumentException("Weights column '" + buildSpec.input_spec.weights_column + "' is not in " +
+              "the training frame.");
+    }
+  }
+
+  private void validateFramesForResponseColumn(AutoMLBuildSpec buildSpec) {
+    if (this.origTrainingFrame.find(buildSpec.input_spec.response_column) == -1) {
+      throw new H2OIllegalArgumentException("Response column '" + buildSpec.input_spec.response_column + "' is not in " +
+              "the training frame.");
+    }
+
+    if (this.validationFrame != null && this.validationFrame.find(buildSpec.input_spec.response_column) == -1) {
+      throw new H2OIllegalArgumentException("Response column '" + buildSpec.input_spec.response_column + "' is not in " +
+              "the validation frame.");
+    }
+
+    if (this.leaderboardFrame != null && this.leaderboardFrame.find(buildSpec.input_spec.response_column) == -1) {
+      throw new H2OIllegalArgumentException("Response column '" + buildSpec.input_spec.response_column + "' is not in " +
+              "the leaderboard frame.");
+    }
+  }
+
+  private void setupTrainingFrameAndItsDerivatives(Frame trainingFrame, AutoMLBuildSpec buildSpec) {
+    
+    ifNecessaryTakeSplitFromTrainingFrameToSetupLeaderbord();
+    
+    if (null == this.trainingFrame) {
+      // when nfolds>0, let trainingFrame be the original frame
+      // but cloning to keep an internal ref just in case the original ref gets deleted from client side
+      // (can occur in some corner cases with Python GC for example if frame get's out of scope during an AutoML rerun)
+      this.trainingFrame = new Frame(trainingFrame);
+      this.trainingFrame._key = Key.make("automl_training_" + trainingFrame._key);
+      DKV.put(this.trainingFrame);
+    }
+
+    initializeColumnsThatAreDerivativesFromTrainingFrame(trainingFrame, buildSpec);
+  }
+
+  private void initializeColumnsThatAreDerivativesFromTrainingFrame(Frame trainingFrame, AutoMLBuildSpec buildSpec) {
+    this.responseColumn = trainingFrame.vec(buildSpec.input_spec.response_column);
+    this.foldColumn = trainingFrame.vec(buildSpec.input_spec.fold_column);
+    this.weightsColumn = trainingFrame.vec(buildSpec.input_spec.weights_column);
   }
 
 
