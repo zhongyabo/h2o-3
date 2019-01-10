@@ -240,85 +240,16 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
   }
 
   private void performAutoFeatureEngineering() {
-    String responseColumnName = this.trainingFrame.name(this.trainingFrame.find(this.responseColumn)); // Question: can we add .name(Vec vec) to Frame's API?
-
     // Hardcoded default strategy for now
-    TEApplicationStrategy defaultTEApplicationStrategy = new AllCategoricalTEApplicationStrategy(this.trainingFrame, responseColumnName);
-    performAutoTargetEncoding(defaultTEApplicationStrategy);
-  }
-
-  //TODO maybe to minimise coupling it is better to introduce AutoMLTEEncodingHelper that will take AutoML instance and return transformed one
-  private void performAutoTargetEncoding(TEApplicationStrategy strategy) {
-   
-    String[] columnsToEncode = strategy.getColumnsToEncode();
-    if(columnsToEncode.length > 0) {
-
-      //TODO Either perform random grid search over parameters or introduce evolutionary selection algo
-      BlendingParams blendingParams = new BlendingParams(5, 1);
-      boolean withBlendedAvg = true;
-      boolean imputeNAsWithNewCategory = true;
-      long seed = buildSpec.build_control.stopping_criteria.seed(); // TODO make it a dedicated parameter for users to set
-      byte holdoutType = TargetEncoder.DataLeakageHandlingStrategy.KFold;
-
-      TargetEncoder tec = new TargetEncoder(columnsToEncode, blendingParams);
-
-      Frame trainingFrame = getTrainingFrame();
-      String responseColumnName = trainingFrame.name(trainingFrame.find(getResponseColumn()));
-      String foldColumnName = trainingFrame.name(trainingFrame.find(getFoldColumn()));
-
-      Map<String, Frame> encodingMap = tec.prepareEncodingMap(trainingFrame, responseColumnName, foldColumnName, imputeNAsWithNewCategory);
-      switch (holdoutType) {
-        case TargetEncoder.DataLeakageHandlingStrategy.KFold:
-          
-          Frame encodedTrainingFrame = tec.applyTargetEncoding(trainingFrame, responseColumnName, encodingMap, holdoutType, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
-          copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedTrainingFrame, this.trainingFrame);
-
-          if(this.validationFrame != null) {
-            Frame encodedValidationFrame = tec.applyTargetEncoding(getValidationFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
-            copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedValidationFrame, this.validationFrame);
-          }
-          if(this.leaderboardFrame != null) {
-            Frame encodedLeaderboardFrame = tec.applyTargetEncoding(getLeaderboardFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
-            copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedLeaderboardFrame, this.leaderboardFrame);
-          }
-          break;
-        case TargetEncoder.DataLeakageHandlingStrategy.LeaveOneOut:
-          Frame encodedTrainingFrameLOO = tec.applyTargetEncoding(trainingFrame, responseColumnName, encodingMap, holdoutType, withBlendedAvg,  imputeNAsWithNewCategory,seed);
-          copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedTrainingFrameLOO, this.trainingFrame);
-
-          // TODO: it is a duplicate to KFold's transformations. Consider to refactor.
-          if(this.validationFrame != null) {
-            Frame encodedValidationFrame = tec.applyTargetEncoding(getValidationFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
-            copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedValidationFrame, this.validationFrame);
-          }
-          if(this.leaderboardFrame != null) {
-            Frame encodedLeaderboardFrame = tec.applyTargetEncoding(getLeaderboardFrame(), responseColumnName, encodingMap, TargetEncoder.DataLeakageHandlingStrategy.None, foldColumnName, withBlendedAvg, imputeNAsWithNewCategory, seed);
-            copyEncodedColumnsToDestinationFrame(columnsToEncode, encodedLeaderboardFrame, this.leaderboardFrame);
-          }
-          break;
-        case TargetEncoder.DataLeakageHandlingStrategy.None:
-      }
-      encodingMapCleanUp(encodingMap);
-    }
-  }
-
-  //Note: we could have avoided this if we were following mutable way in TargetEncoder
-  private void copyEncodedColumnsToDestinationFrame(String[] columnsToEncode, Frame encodedFrame, Frame destinationFrame) {
-    for(String column :columnsToEncode) {
-      String encodedColumnName = column + "_te";
-      Vec encodedVec = encodedFrame.vec(encodedColumnName);
-      Vec encodedVecCopy = encodedVec.makeCopy();
-      destinationFrame.add(encodedColumnName, encodedVecCopy); 
-      encodedVec.remove();
-      encodedVecCopy.remove();
-    }
-    encodedFrame.delete();
-  }
-
-  private void encodingMapCleanUp(Map<String, Frame> encodingMap) {
-    for( Map.Entry<String, Frame> map : encodingMap.entrySet()) {
-      map.getValue().delete();
-    }
+    TEApplicationStrategy defaultTEApplicationStrategy = new AllCategoricalTEApplicationStrategy(this.trainingFrame, getResponseColumn());
+    AutoMLTargetEncodingAssistant teAssistant = new AutoMLTargetEncodingAssistant(getTrainingFrame(),
+            getValidationFrame(),
+            getLeaderboardFrame(),
+            getResponseColumn(),
+            getFoldColumn(),
+            getBuildSpec(),
+            defaultTEApplicationStrategy);
+    teAssistant.performAutoTargetEncoding();
   }
   
   private void handleEarlyStoppingParameters(AutoMLBuildSpec buildSpec) {
