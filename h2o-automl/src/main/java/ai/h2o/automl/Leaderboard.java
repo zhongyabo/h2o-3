@@ -248,6 +248,7 @@ public class Leaderboard extends Keyed<Leaderboard> {
             continue;
           }
 
+          //WARNING: if leaderboardFrame is not null but contains 0 rows then following logic will fail to retrieve ModelMetrics.
           // If leaderboardFrame is null, use xval metrics instead
           ModelMetrics mm = null;
           if (leaderboardFrame == null) {

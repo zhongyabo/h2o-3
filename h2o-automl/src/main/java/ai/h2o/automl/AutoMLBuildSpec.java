@@ -82,6 +82,7 @@ public class AutoMLBuildSpec extends Iced {
    */
   static final public class AutoMLTEControl extends Iced {
 
+    public boolean enabled = true;
     public TEApplicationStrategy application_strategy;
     public TEParamsSelectionStrategy params_selection_strategy;
     public long seed = -1;

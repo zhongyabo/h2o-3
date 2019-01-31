@@ -241,20 +241,23 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
 
     AutoMLBuildSpec buildSpec = getBuildSpec();
 
-    //We need to move following into `performAutoTE`
-    TEApplicationStrategy defaultTEApplicationStrategy = buildSpec.te_spec.application_strategy;
-    TEParamsSelectionStrategy defaultTEParamsSelectionStrategy = buildSpec.te_spec.params_selection_strategy; 
-    
-    AutoMLTargetEncodingAssistant teAssistant = new AutoMLTargetEncodingAssistant(getTrainingFrame(),
-            getValidationFrame(),
-            getLeaderboardFrame(),
-            getResponseColumn(),
-            getFoldColumn(),
-            getBuildSpec(),
-            defaultTEParamsSelectionStrategy,
-            defaultTEApplicationStrategy);
-    
-    teAssistant.performAutoTargetEncoding();
+    if(buildSpec.te_spec.enabled) {
+
+      //We need to move the following code into `performAutoTargetEncoding` method
+      TEApplicationStrategy defaultTEApplicationStrategy = buildSpec.te_spec.application_strategy;
+      TEParamsSelectionStrategy defaultTEParamsSelectionStrategy = buildSpec.te_spec.params_selection_strategy;
+
+      AutoMLTargetEncodingAssistant teAssistant = new AutoMLTargetEncodingAssistant(getTrainingFrame(),
+              getValidationFrame(),
+              getLeaderboardFrame(),
+              getResponseColumn(),
+              getFoldColumn(),
+              getBuildSpec(),
+              defaultTEParamsSelectionStrategy,
+              defaultTEApplicationStrategy);
+
+      teAssistant.performAutoTargetEncoding();
+    }
   }
   
   private void handleEarlyStoppingParameters(AutoMLBuildSpec buildSpec) {
@@ -330,6 +333,7 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
           Key[] keysForSplits = {Key.make("automl_training_" + origTrainingFrame._key), Key.make("automl_leaderboard_" + origTrainingFrame._key)};
           Frame[] splits = ShuffleSplitFrame.shuffleSplitFrame(origTrainingFrame, keysForSplits, splitRatio, buildSpec.build_control.stopping_criteria.seed());
           this.trainingFrame = splits[0];
+          if(splits[1].numRows() == 0) throw new IllegalStateException("During spliting from training frame we ended up with empty leaderboardFrame");
           this.leaderboardFrame = splits[1];
           this.didValidationSplit = false;
           this.didLeaderboardSplit = true;
@@ -435,13 +439,13 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
       DKV.put(this.trainingFrame);
     }
 
-    initializeColumnsThatAreDerivativesFromTrainingFrame(trainingFrame, buildSpec);
+    initializeColumnsThatAreDerivativesFromTrainingFrame(this.trainingFrame, buildSpec);
   }
 
-  private void initializeColumnsThatAreDerivativesFromTrainingFrame(Frame trainingFrame, AutoMLBuildSpec buildSpec) {
-    this.responseColumn = trainingFrame.vec(buildSpec.input_spec.response_column);
-    this.foldColumn = trainingFrame.vec(buildSpec.input_spec.fold_column);
-    this.weightsColumn = trainingFrame.vec(buildSpec.input_spec.weights_column);
+  private void initializeColumnsThatAreDerivativesFromTrainingFrame(Frame thisTrainingFrame, AutoMLBuildSpec buildSpec) {
+    this.responseColumn = thisTrainingFrame.vec(buildSpec.input_spec.response_column);
+    this.foldColumn = thisTrainingFrame.vec(buildSpec.input_spec.fold_column);
+    this.weightsColumn = thisTrainingFrame.vec(buildSpec.input_spec.weights_column);
   }
 
 
