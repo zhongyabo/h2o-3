@@ -1,6 +1,7 @@
 package hex.genmodel;
 
 import hex.ModelCategory;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -170,6 +171,11 @@ public class MojoPipelineWriter extends AbstractMojoWriter {
     @Override
     public double[] modelClassDist() {
       return _finalModel._modelClassDistrib;
+    }
+
+    @Override
+    public Map<String, Map<String, int[]>> targetEncodingMap() {
+      throw new NotImplementedException();
     }
 
     @Override
