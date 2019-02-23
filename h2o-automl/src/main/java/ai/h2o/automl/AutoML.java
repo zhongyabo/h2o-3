@@ -1,8 +1,6 @@
 package ai.h2o.automl;
 
 import ai.h2o.automl.UserFeedbackEvent.Stage;
-import ai.h2o.automl.targetencoding.strategy.TEApplicationStrategy;
-import ai.h2o.automl.targetencoding.strategy.TEParamsSelectionStrategy;
 import hex.Model;
 import hex.ModelBuilder;
 import hex.ScoreKeeper.StoppingMetric;
@@ -222,8 +220,6 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
     userFeedback.info(Stage.Workflow, "Project: " + projectName());
 
     handleDatafileParameters(buildSpec);
-    
-    performAutoFeatureEngineering();
 
     handleCVParameters(buildSpec);
 
@@ -237,24 +233,19 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
     this.tempFrames = new ArrayList<>();
   }
 
-  private void performAutoFeatureEngineering() {
+  private void performTargetEncoding(ModelBuilder modelBuilder) {
 
     AutoMLBuildSpec buildSpec = getBuildSpec();
 
     if(buildSpec.te_spec.enabled) {
-
-      //We need to move the following code into `performAutoTargetEncoding` method
-      TEApplicationStrategy defaultTEApplicationStrategy = buildSpec.te_spec.application_strategy;
-      TEParamsSelectionStrategy defaultTEParamsSelectionStrategy = buildSpec.te_spec.params_selection_strategy;
 
       AutoMLTargetEncodingAssistant teAssistant = new AutoMLTargetEncodingAssistant(getTrainingFrame(),
               getValidationFrame(),
               getLeaderboardFrame(),
               getResponseColumn(),
               getFoldColumn(),
-              getBuildSpec(),
-              defaultTEParamsSelectionStrategy,
-              defaultTEApplicationStrategy);
+              buildSpec,
+              modelBuilder);
 
       teAssistant.performAutoTargetEncoding();
     }
@@ -660,6 +651,8 @@ public final class AutoML extends Lockable<AutoML> implements TimedH2ORunnable {
     builder.init(false);          // validate parameters
 
     // TODO: handle error_count and messages
+    
+    performTargetEncoding(builder);
 
     Log.debug("Training model: " + algoName + ", time remaining (ms): " + timeRemainingMs());
     try {
