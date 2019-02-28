@@ -2,7 +2,6 @@ package hex.genmodel;
 
 import hex.ModelCategory;
 
-import java.awt.*;
 import java.util.Map;
 
 public interface ModelDescriptor {
