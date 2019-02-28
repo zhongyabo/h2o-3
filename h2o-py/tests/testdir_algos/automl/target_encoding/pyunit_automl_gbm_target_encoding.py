@@ -88,12 +88,9 @@ def titanic_with_te_loostrategy(frame = None, seeds = None):
     ds = split_data(frame, current_seed)
     targetColumnName = "survived"
 
-    foldColumnName = "kfold_column"
-    ds['train'][foldColumnName] = ds['train'].kfold_column(n_folds=5, seed=current_seed)
-
     teColumns = ["home.dest", "cabin", "embarked"]
     targetEncoder = TargetEncoder(x= teColumns, y= targetColumnName,
-                                  fold_column= foldColumnName, blending_avg= True, inflection_point = 3, smoothing = 1)
+                                blending_avg= True, inflection_point = 3, smoothing = 1)
     targetEncoder.fit(frame=ds['train'])
 
     encodedTrain = targetEncoder.transform(frame=ds['train'], holdout_type="loo", seed=1234)
@@ -167,7 +164,7 @@ if __name__ == "__main__":
 
   titanic = h2o.import_file(pyunit_utils.locate("smalldata/gbm_test/titanic.csv"), header=1)
 
-  runs = 1 # Set to a bigger value to get more objective resuts.
+  runs = 10 # Set to a bigger value to get more objective resuts.
 
   seeds = random.sample(range(1, 10000), runs)
 
