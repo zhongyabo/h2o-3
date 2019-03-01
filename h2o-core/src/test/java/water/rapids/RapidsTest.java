@@ -16,7 +16,6 @@ import water.runner.CloudSize;
 import water.runner.H2ORunner;
 import water.util.ArrayUtils;
 import water.util.FileUtils;
-import water.util.FrameUtils;
 import water.util.Log;
 
 import java.io.File;
@@ -24,12 +23,13 @@ import java.util.Arrays;
 import java.util.Random;
 
 import static org.junit.Assert.*;
+import static water.TestUtil.*;
 import static water.rapids.Rapids.IllegalASTException;
 
 
 @RunWith(H2ORunner.class)
 @CloudSize(1)
-public class RapidsTest extends TestUtil {
+public class RapidsTest {
 
 
   @Test public void bigSlice() {
