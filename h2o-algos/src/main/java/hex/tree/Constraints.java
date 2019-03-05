@@ -20,7 +20,7 @@ public class Constraints extends Iced<Constraints> {
     _use_bounds = useBounds;
   }
 
-  int getColumnConstraint(int col) {
+  public int getColumnConstraint(int col) {
     return _cs[col];
   }
 
