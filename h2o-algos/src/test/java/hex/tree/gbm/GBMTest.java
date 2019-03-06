@@ -3516,7 +3516,7 @@ public class GBMTest extends TestUtil {
     try {
       Scope.enter();
       Frame f = Scope.track(parse_test_file("smalldata/logreg/prostate.csv"));
-      f.replace(f.find("CAPSULE"), f.vec("CAPSULE").toCategoricalVec());
+      f.replace(f.find("CAPSULE"), f.vec("CAPSULE").toNumericVec());
       DKV.put(f);
 
       GBMModel.GBMParameters parms = new GBMModel.GBMParameters();
@@ -3524,9 +3524,10 @@ public class GBMTest extends TestUtil {
       parms._response_column = "CAPSULE";
       parms._train = f._key;
       parms._monotone_constraints = new KeyValue[]{new KeyValue("AGE", 1)};
+      parms._distribution = DistributionFamily.tweedie;
 
       expectedException.expectMessage("ERRR on field: _monotone_constraints: " +
-              "Monotone constraints are only supported for Gaussian distribution, your distribution: bernoulli.");
+              "Monotone constraints are only supported for Gaussian and Bernoulli distributions, your distribution: tweedie.");
 
       GBMModel model = new GBM(parms).trainModel().get();
       Scope.track_generic(model);

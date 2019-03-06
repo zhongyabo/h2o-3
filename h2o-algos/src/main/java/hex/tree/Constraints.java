@@ -1,5 +1,6 @@
 package hex.tree;
 
+import hex.genmodel.utils.DistributionFamily;
 import water.Iced;
 
 public class Constraints extends Iced<Constraints> {
@@ -7,16 +8,18 @@ public class Constraints extends Iced<Constraints> {
   private final int[] _cs;
   final double _min;
   final double _max;
+  final DistributionFamily _dist;
   private final boolean _use_bounds;
 
-  public Constraints(int[] cs, boolean useBounds) {
-    this(cs, useBounds, Double.NaN, Double.NaN);
+  public Constraints(int[] cs, DistributionFamily dist, boolean useBounds) {
+    this(cs, dist, useBounds, Double.NaN, Double.NaN);
   }
 
-  private Constraints(int[] cs, boolean useBounds, double min, double max) {
+  private Constraints(int[] cs, DistributionFamily dist, boolean useBounds, double min, double max) {
     _cs = cs;
     _min = min;
     _max = max;
+    _dist = dist;
     _use_bounds = useBounds;
   }
 
@@ -26,9 +29,9 @@ public class Constraints extends Iced<Constraints> {
 
   Constraints withNewConstraint(int way, double bound) {
     if (way == 0) { // left
-      return new Constraints(_cs, _use_bounds, _min, bound);
+      return new Constraints(_cs, _dist, _use_bounds, _min, bound);
     } else {
-      return new Constraints(_cs, _use_bounds, bound, _max);
+      return new Constraints(_cs, _dist, _use_bounds, bound, _max);
     }
   }
 
@@ -36,4 +39,8 @@ public class Constraints extends Iced<Constraints> {
     return _use_bounds;
   }
 
+  boolean needsGammaDenum() {
+    return !_dist.equals(DistributionFamily.gaussian);
+  }
+  
 }

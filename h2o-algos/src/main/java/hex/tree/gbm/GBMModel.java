@@ -60,7 +60,7 @@ public class GBMModel extends SharedTreeModel<GBMModel, GBMModel.GBMParameters, 
               _distribution == DistributionFamily.bernoulli ||
               _distribution == DistributionFamily.quasibinomial ||
               _distribution == DistributionFamily.multinomial;
-      return new Constraints(cs, useBounds);
+      return new Constraints(cs, _distribution, useBounds);
     }
 
   }
