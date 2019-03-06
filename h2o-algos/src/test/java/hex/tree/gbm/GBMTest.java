@@ -34,7 +34,7 @@ import static water.fvec.FVecTest.makeByteVec;
 public class GBMTest extends TestUtil {
 
   @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  public transient ExpectedException expectedException = ExpectedException.none();
 
   @BeforeClass public static void stall() { stall_till_cloudsize(1); }
 
