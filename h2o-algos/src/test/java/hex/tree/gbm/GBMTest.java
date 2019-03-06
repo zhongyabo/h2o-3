@@ -3469,7 +3469,7 @@ public class GBMTest extends TestUtil {
     try {
       Scope.enter();
       Frame f = Scope.track(parse_test_file("smalldata/logreg/prostate.csv"));
-      f.replace(f.find("CAPSULE"), f.vec("CAPSULE").toNumericVec());
+      f.replace(f.find("CAPSULE"), f.vec("CAPSULE").toCategoricalVec());
       DKV.put(f);
   
       GBMModel.GBMParameters parms = new GBMModel.GBMParameters();

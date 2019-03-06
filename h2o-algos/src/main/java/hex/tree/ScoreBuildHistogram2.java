@@ -323,7 +323,10 @@ public class ScoreBuildHistogram2 extends ScoreBuildHistogram {
             _chks[id][_col].getDoubles(cs,0,len);
             extracted = true;
           }
-          h.updateHisto(ws, cs, ys, rs, hi, lo);
+          final int respIdx = 7; // FIXME: only works for prostate dataset :)
+          double[] resp = new double[len];
+          _chks[id][respIdx].getDoubles(resp, 0, len);
+          h.updateHisto(ws, resp, cs, ys, rs, hi, lo);
         }
       }
     }

@@ -1,5 +1,7 @@
 package hex.tree;
 
+import hex.Distribution;
+import hex.genmodel.utils.DistributionFamily;
 import sun.misc.Unsafe;
 import water.*;
 import water.fvec.Frame;
@@ -58,6 +60,7 @@ public final class DHistogram extends Iced {
                                  // Current possible values are
                                  // - 3:_pred1 nor _pred2 provided
                                  // - 5: if either _pred1 or _pred2 is provided (or both)
+  private final Distribution _dist;
   public double w(int i){  return _vals[_vals_dim*i+0];}
   public double wY(int i){ return _vals[_vals_dim*i+1];}
   public double wYY(int i){return _vals[_vals_dim*i+2];}
@@ -166,13 +169,20 @@ public final class DHistogram extends Iced {
     }
   }
   public DHistogram(String name, final int nbins, int nbins_cats, byte isInt, double min, double maxEx,
-                    double minSplitImprovement, SharedTreeModel.SharedTreeParameters.HistogramType histogramType, long seed, Key globalQuantilesKey, double pred1, double pred2) {
+                    double minSplitImprovement, SharedTreeModel.SharedTreeParameters.HistogramType histogramType, long seed, Key globalQuantilesKey,
+                    double pred1, double pred2, DistributionFamily dist) {
     assert nbins > 1;
     assert nbins_cats > 1;
     assert maxEx > min : "Caller ensures "+maxEx+">"+min+", since if max==min== the column "+name+" is all constants";
     _pred1 = pred1;
     _pred2 = pred2;
-    _vals_dim = Double.isNaN(_pred1) && Double.isNaN(_pred2) ? 3 : 5;
+    if (DistributionFamily.gaussian.equals(dist)) {
+      _vals_dim = Double.isNaN(_pred1) && Double.isNaN(_pred2) ? 3 : 5;
+      _dist = null;
+    } else {
+      _vals_dim = 6;
+      _dist = new Distribution(dist);
+    }
     _isInt = isInt;
     _name = name;
     _min=min;
@@ -342,7 +352,7 @@ public final class DHistogram extends Iced {
       final long vlen = v.length();
       try {
         hs[c] = v.naCnt() == vlen || v.min() == v.max() ?
-            null : make(fr._names[c], nbins, (byte) (v.isCategorical() ? 2 : (v.isInt() ? 1 : 0)), minIn, maxEx, seed, parms, globalQuantilesKey[c]);
+            null : make(fr._names[c], nbins, (byte) (v.isCategorical() ? 2 : (v.isInt() ? 1 : 0)), minIn, maxEx, seed, parms, globalQuantilesKey[c], parms._distribution);
       } catch(StepOutOfRangeException e) {
         hs[c] = null;
         Log.warn("Column " + fr._names[c]  + " with min = " + v.min() + ", max = " + v.max() + " has step out of range (" + e.getMessage() + ") and is ignored.");
@@ -354,12 +364,12 @@ public final class DHistogram extends Iced {
 
 
 
-  public static DHistogram make(String name, final int nbins, byte isInt, double min, double maxEx, long seed, SharedTreeModel.SharedTreeParameters parms, Key globalQuantilesKey) {
-    return new DHistogram(name,nbins, parms._nbins_cats, isInt, min, maxEx, parms._min_split_improvement, parms._histogram_type, seed, globalQuantilesKey, Double.NaN, Double.NaN);
+  public static DHistogram make(String name, final int nbins, byte isInt, double min, double maxEx, long seed, SharedTreeModel.SharedTreeParameters parms, Key globalQuantilesKey, DistributionFamily dist) {
+    return new DHistogram(name,nbins, parms._nbins_cats, isInt, min, maxEx, parms._min_split_improvement, parms._histogram_type, seed, globalQuantilesKey, Double.NaN, Double.NaN, dist);
   }
 
-  public static DHistogram make(String name, final int nbins, byte isInt, double min, double maxEx, long seed, SharedTreeModel.SharedTreeParameters parms, Key globalQuantilesKey, double pred1, double pred2) {
-    return new DHistogram(name,nbins, parms._nbins_cats, isInt, min, maxEx, parms._min_split_improvement, parms._histogram_type, seed, globalQuantilesKey, pred1, pred2);
+  public static DHistogram make(String name, final int nbins, byte isInt, double min, double maxEx, long seed, SharedTreeModel.SharedTreeParameters parms, Key globalQuantilesKey, double pred1, double pred2, DistributionFamily dist) {
+    return new DHistogram(name,nbins, parms._nbins_cats, isInt, min, maxEx, parms._min_split_improvement, parms._histogram_type, seed, globalQuantilesKey, pred1, pred2, dist);
   }
 
   // Pretty-print a histogram
@@ -408,7 +418,7 @@ public final class DHistogram extends Iced {
    * @param hi  upper bound on index into rows array to be processed by this call (exclusive)
    * @param lo  lower bound on index into rows array to be processed by this call (inclusive)
    */
-  public void updateHisto(double[] ws, double[] cs, double[] ys, int [] rows, int hi, int lo){
+  public void updateHisto(double[] ws, double resp[], double[] cs, double[] ys, int [] rows, int hi, int lo){
     // Gather all the data for this set of rows, for 1 column and 1 split/NID
     // Gather min/max, wY and sum-squares.
     for(int r = lo; r< hi; ++r) {
@@ -426,9 +436,12 @@ public final class DHistogram extends Iced {
       _vals[_vals_dim*b + 0] += weight;
       _vals[_vals_dim*b + 1] += wy;
       _vals[_vals_dim*b + 2] += wyy;
-      if (_vals_dim == 5) {
+      if (_vals_dim >= 5) {
         _vals[_vals_dim * b + 3] += weight * (_pred1 - y) * (_pred1 - y);
         _vals[_vals_dim * b + 4] += weight * (_pred2 - y) * (_pred2 - y);
+        if (_vals_dim == 6) {
+          _vals[_vals_dim * b + 5] += _dist.gammaDenom(weight, resp[k], y, Double.NaN);
+        }
       }
     }
   }

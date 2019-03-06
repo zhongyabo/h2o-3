@@ -135,8 +135,9 @@ public class DTree extends Iced {
     final double _se0, _se1;    // Squared error of each subsplit
     final double _n0,  _n1;     // (Weighted) Rows in each final split
     final double _p0,  _p1;     // Predicted value for each split
+    final double _denom0,  _denom1;
 
-    public Split(int col, int bin, DHistogram.NASplitDir nasplit, IcedBitSet bs, byte equal, double se, double se0, double se1, double n0, double n1, double p0, double p1 ) {
+    public Split(int col, int bin, DHistogram.NASplitDir nasplit, IcedBitSet bs, byte equal, double se, double se0, double se1, double n0, double n1, double p0, double p1, double denom0, double denom1) {
       assert(nasplit!= DHistogram.NASplitDir.None);
       assert(equal!=1); //no longer done
       assert se > se0+se1 || se==Double.MAX_VALUE; // No point in splitting unless error goes down
@@ -145,6 +146,7 @@ public class DTree extends Iced {
       _col = col;  _bin = bin; _nasplit = nasplit; _bs = bs;  _equal = equal;  _se = se;
       _n0 = n0;  _n1 = n1;  _se0 = se0;  _se1 = se1;
       _p0 = p0;  _p1 = p1;
+      _denom0 = denom0; _denom1 = denom1;
     }
     public final double pre_split_se() { return _se; }
     public final double se() { return _se0+_se1; }
@@ -280,7 +282,7 @@ public class DTree extends Iced {
         if( h._isInt > 0 && !(min+1 < maxEx ) )
           continue; // This column will not split again
         assert min < maxEx && adj_nbins > 1 : ""+min+"<"+maxEx+" nbins="+adj_nbins;
-        nhists[j] = DHistogram.make(h._name, adj_nbins, h._isInt, min, maxEx, h._seed*0xDECAF+(way+1), parms, h._globalQuantilesKey, pred1, pred2);
+        nhists[j] = DHistogram.make(h._name, adj_nbins, h._isInt, min, maxEx, h._seed*0xDECAF+(way+1), parms, h._globalQuantilesKey, pred1, pred2, parms._distribution);
         cnt++;                    // At least some chance of splitting
       }
       return cnt == 0 ? null : nhists;
@@ -827,9 +829,11 @@ public class DTree extends Iced {
         vals[vals_dim*i+0] = hs._vals[vals_dim*id+0];
         vals[vals_dim*i+1] = hs._vals[vals_dim*id+1];
         vals[vals_dim*i+2] = hs._vals[vals_dim*id+2];
-        if (vals_dim == 5) {
+        if (vals_dim >= 5) {
           vals[vals_dim * i + 3] = hs._vals[vals_dim * id + 3];
           vals[vals_dim * i + 4] = hs._vals[vals_dim * id + 4];
+          if (vals_dim == 6)
+            vals[vals_dim * i + 5] = hs._vals[vals_dim * id + 5];
         }
 //        Log.info(vals[3*i] + " obs have avg response [" + i + "]=" + avgs[id]);
       }
@@ -839,8 +843,9 @@ public class DTree extends Iced {
     double   wlo[] = MemoryManager.malloc8d(nbins+1);
     double  wYlo[] = MemoryManager.malloc8d(nbins+1);
     double wYYlo[] = MemoryManager.malloc8d(nbins+1);
-    double pr1lo[] = vals_dim == 5 ? MemoryManager.malloc8d(nbins+1) : null;
-    double pr2lo[] = vals_dim == 5 ? MemoryManager.malloc8d(nbins+1) : null;
+    double pr1lo[] = vals_dim >= 5 ? MemoryManager.malloc8d(nbins+1) : null;
+    double pr2lo[] = vals_dim >= 5 ? MemoryManager.malloc8d(nbins+1) : null;
+    double denlo[] = vals_dim == 6 ? MemoryManager.malloc8d(nbins+1) : null;
     for( int b=1; b<=nbins; b++ ) {
       int id = vals_dim*(b-1);
       double n0 =   wlo[b-1], n1 = vals[id+0];
@@ -851,11 +856,15 @@ public class DTree extends Iced {
       wlo[b] = n0+n1;
       wYlo[b] = m0+m1;
       wYYlo[b] = s0+s1;
-      if (vals_dim == 5) {
+      if (vals_dim >= 5) {
         double p10 = pr1lo[b - 1], p11 = vals[id + 3];
         double p20 = pr2lo[b - 1], p21 = vals[id + 4];
         pr1lo[b] = p10 + p11;
         pr2lo[b] = p20 + p21;
+        if (vals_dim == 6) {
+          double d0 = denlo[b - 1], d1 = vals[id + 5];
+          denlo[b] = d0 + d1;
+        }
       }
     }
     double wNA = hs.wNA();
@@ -880,8 +889,9 @@ public class DTree extends Iced {
     double   whi[] = MemoryManager.malloc8d(nbins+1);
     double  wYhi[] = MemoryManager.malloc8d(nbins+1);
     double wYYhi[] = MemoryManager.malloc8d(nbins+1);
-    double pr1hi[] = MemoryManager.malloc8d(nbins+1);
-    double pr2hi[] = MemoryManager.malloc8d(nbins+1);
+    double pr1hi[] = vals_dim >= 5 ? MemoryManager.malloc8d(nbins+1) : null;
+    double pr2hi[] = vals_dim >= 5 ? MemoryManager.malloc8d(nbins+1) : null;
+    double denhi[] = vals_dim == 6 ? MemoryManager.malloc8d(nbins+1) : null;
     for( int b=nbins-1; b>=0; b-- ) {
       double n0 =   whi[b+1], n1 = vals[vals_dim*b];
       if( n0==0 && n1==0 )
@@ -891,11 +901,15 @@ public class DTree extends Iced {
       whi[b] = n0+n1;
       wYhi[b] = m0+m1;
       wYYhi[b] = s0+s1;
-      if (vals_dim == 5) {
+      if (vals_dim >= 5) {
         double p10 = pr1hi[b + 1], p11 = vals[vals_dim * b + 3];
         double p20 = pr2hi[b + 1], p21 = vals[vals_dim * b + 4];
         pr1hi[b] = p10 + p11;
         pr2hi[b] = p20 + p21;
+        if (vals_dim == 6) {
+          double d0 = denhi[b + 1], d1 = vals[vals_dim * b + 5];
+          denhi[b] = d0 + d1;
+        }
       }
       assert MathUtils.compare(wlo[b]+ whi[b]+wNA,tot,1e-5,1e-5);
     }
@@ -1038,13 +1052,18 @@ public class DTree extends Iced {
       return null;
     }
 
-    double p0 = predLeft / nLeft;
-    double p1 = predRight / nRight;
-
     if (nLeft < min_rows || nRight < min_rows) {
       if (SharedTree.DEV_DEBUG) Log.info("can't split " + hs._name + ": split would violate min_rows limit.");
       return null;
     }
+
+    double p0 = predLeft / denlo[best];
+    double p1 = predRight / denhi[best];
+
+    /*
+    double p0 = predLeft / nLeft;
+    double p1 = predRight / nRight;
+    */
 
     if (constraint != 0) {
       if (constraint * p0 > constraint * p1) {
@@ -1125,7 +1144,7 @@ public class DTree extends Iced {
     assert constraint == 0 || constraint * p0 <= constraint * p1;
     assert (Double.isNaN(min) || min <= p0) && (Double.isNaN(max) || p0 <= max);
     assert (Double.isNaN(min) || min <= p1) && (Double.isNaN(max) || p1 <= max);
-    Split split = new Split(col, best, nasplit, bs, equal, seBefore,best_seL, best_seR, nLeft, nRight, p0, p1);
+    Split split = new Split(col, best, nasplit, bs, equal, seBefore,best_seL, best_seR, nLeft, nRight, predLeft/ nLeft, predRight / nRight, denlo[best], denhi[best]);
     if (SharedTree.DEV_DEBUG) Log.info("splitting on " + hs._name + ": " + split);
     return split;
   }

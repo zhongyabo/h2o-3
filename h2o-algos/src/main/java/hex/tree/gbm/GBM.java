@@ -92,7 +92,7 @@ public class GBM extends SharedTree<GBMModel,GBMModel.GBMParameters,GBMModel.GBM
         error("_offset_column", "Offset is not supported for multinomial distribution.");
       }
       if (!DistributionFamily.gaussian.equals(_parms._distribution) && _parms._monotone_constraints != null && _parms._monotone_constraints.length > 0) {
-        error("_monotone_constraints", "Monotone constraints are only supported for Gaussian distribution, your distribution: " + _parms._distribution + ".");
+        //error("_monotone_constraints", "Monotone constraints are only supported for Gaussian distribution, your distribution: " + _parms._distribution + ".");
       }
     }
 
