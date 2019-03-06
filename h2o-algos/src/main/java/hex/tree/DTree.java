@@ -1057,23 +1057,23 @@ public class DTree extends Iced {
       return null;
     }
 
-    double p0 = predLeft / denlo[best];
-    double p1 = predRight / denhi[best];
-
-    /*
-    double p0 = predLeft / nLeft;
-    double p1 = predRight / nRight;
-    */
+    // output predictions
+    double out_p0 = predLeft / nLeft;
+    double out_p1 = predRight / nRight;
 
     if (constraint != 0) {
-      if (constraint * p0 > constraint * p1) {
+      // test predictions - for checking constraints
+      final double test_p0 = denlo != null ? predLeft / denlo[best] : out_p0;
+      final double test_p1 = denhi != null ? predRight / denhi[best] : out_p1;
+
+      if (constraint * test_p0 > constraint * test_p1) {
         if (SharedTree.DEV_DEBUG) Log.info("can't split " + hs._name + ": split would violate monotone constraint.");
         return null;
       }
     }
 
     if (!Double.isNaN(min)) {
-      if (p0 < min) {
+      if (out_p0 < min) {
         if (! useBounds) {
           if (SharedTree.DEV_DEBUG)
             Log.info("minimum constraint violated in the left split of " + hs._name + ": node will not split");
@@ -1081,10 +1081,10 @@ public class DTree extends Iced {
         }
         if (SharedTree.DEV_DEBUG)
           Log.info("minimum constraint violated in the left split of " + hs._name + ": left node will predict minimum bound: " + min);
-        p0 = min;
+        out_p0 = min;
         best_seL = pr1lo[best];
       }
-      if (p1 < min) {
+      if (out_p1 < min) {
         if (! useBounds) {
           if (SharedTree.DEV_DEBUG)
             Log.info("minimum constraint violated in the right split of " + hs._name + ": node will not split");
@@ -1092,12 +1092,12 @@ public class DTree extends Iced {
         }
         if (SharedTree.DEV_DEBUG)
           Log.info("minimum constraint violated in the right split of " + hs._name + ": right node will predict minimum bound: " + min);
-        p1 = min;
+        out_p1 = min;
         best_seR = pr1hi[best];
       }
     }
     if (!Double.isNaN(max)) {
-      if (p0 > max) {
+      if (out_p0 > max) {
         if (! useBounds) {
           if (SharedTree.DEV_DEBUG)
             Log.info("minimum constraint violated in the left split of " + hs._name + ": node will not split");
@@ -1105,10 +1105,10 @@ public class DTree extends Iced {
         }
         if (SharedTree.DEV_DEBUG)
           Log.info("maximum constraint violated in the left split of " + hs._name + ": left node will predict maximum bound: " + max);
-        p0 = max;
+        out_p0 = max;
         best_seL = pr2lo[best];
       }
-      if (p1 > max) {
+      if (out_p1 > max) {
         if (! useBounds) {
           if (SharedTree.DEV_DEBUG)
             Log.info("minimum constraint violated in the right split of " + hs._name + ": node will not split");
@@ -1116,7 +1116,7 @@ public class DTree extends Iced {
         }
         if (SharedTree.DEV_DEBUG)
           Log.info("maximum constraint violated in the right split of " + hs._name + ": right node will predict maximum bound: " + max);
-        p1 = max;
+        out_p1 = max;
         best_seR = pr2hi[best];
       }
     }
@@ -1141,10 +1141,10 @@ public class DTree extends Iced {
     if (nasplit == DHistogram.NASplitDir.None) {
       nasplit = nLeft > nRight ? DHistogram.NASplitDir.Left : DHistogram.NASplitDir.Right;
     }
-    assert constraint == 0 || constraint * p0 <= constraint * p1;
-    assert (Double.isNaN(min) || min <= p0) && (Double.isNaN(max) || p0 <= max);
-    assert (Double.isNaN(min) || min <= p1) && (Double.isNaN(max) || p1 <= max);
-    Split split = new Split(col, best, nasplit, bs, equal, seBefore,best_seL, best_seR, nLeft, nRight, predLeft/ nLeft, predRight / nRight, denlo[best], denhi[best]);
+    assert constraint == 0 || constraint * out_p0 <= constraint * out_p1;
+    assert (Double.isNaN(min) || min <= out_p0) && (Double.isNaN(max) || out_p0 <= max);
+    assert (Double.isNaN(min) || min <= out_p1) && (Double.isNaN(max) || out_p1 <= max);
+    Split split = new Split(col, best, nasplit, bs, equal, seBefore,best_seL, best_seR, nLeft, nRight, out_p0, out_p1, denlo[best], denhi[best]);
     if (SharedTree.DEV_DEBUG) Log.info("splitting on " + hs._name + ": " + split);
     return split;
   }
