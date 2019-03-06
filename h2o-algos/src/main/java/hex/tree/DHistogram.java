@@ -178,7 +178,7 @@ public final class DHistogram extends Iced {
     _pred2 = pred2;
     if (DistributionFamily.gaussian.equals(dist)) {
       _vals_dim = Double.isNaN(_pred1) && Double.isNaN(_pred2) ? 3 : 5;
-      _dist = null;
+      _dist = null; // intentionally cause NPE if used incorrectly
     } else {
       _vals_dim = 6;
       _dist = new Distribution(dist);
@@ -418,7 +418,7 @@ public final class DHistogram extends Iced {
    * @param hi  upper bound on index into rows array to be processed by this call (exclusive)
    * @param lo  lower bound on index into rows array to be processed by this call (inclusive)
    */
-  public void updateHisto(double[] ws, double resp[], double[] cs, double[] ys, int [] rows, int hi, int lo){
+  void updateHisto(double[] ws, double resp[], double[] cs, double[] ys, int [] rows, int hi, int lo){
     // Gather all the data for this set of rows, for 1 column and 1 split/NID
     // Gather min/max, wY and sum-squares.
     for(int r = lo; r< hi; ++r) {

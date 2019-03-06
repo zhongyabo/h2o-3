@@ -3520,6 +3520,7 @@ public class GBMTest extends TestUtil {
       DKV.put(f);
 
       GBMModel.GBMParameters parms = new GBMModel.GBMParameters();
+      parms._ignored_columns = new String[]{"ID"};
       parms._response_column = "CAPSULE";
       parms._train = f._key;
       parms._monotone_constraints = new KeyValue[]{new KeyValue("AGE", 1)};
