@@ -886,6 +886,14 @@ public class DTree extends Iced {
       return null;
     }
 
+    final double denNA = vals_dim == 6 ? hs._vals[hs._vals_dim*hs._nbin+5] : 0;
+    if (wNA > 0) {
+      System.out.println();
+    }
+    
+    double denNARight = 0;
+    double denNALeft = 0;
+    
     // Compute mean/var for cumulative bins from nbins to 0 inclusive.
     double   whi[] = MemoryManager.malloc8d(nbins+1);
     double  wYhi[] = MemoryManager.malloc8d(nbins+1);
@@ -942,6 +950,7 @@ public class DTree extends Iced {
       predLeft = wYhi[0];
       nRight = wNA;
       predRight = wYNA;
+      denNARight = denNA;
     }
 
     // Now roll the split-point across the bins.  There are 2 ways to do this:
@@ -1002,6 +1011,8 @@ public class DTree extends Iced {
                 nRight = whi[best];
                 predLeft = wYlo[best] + wYNA;
                 predRight = wYhi[best];
+                denNALeft = denNA;
+                denNARight = 0;
                 nasplit = DHistogram.NASplitDir.NALeft;
               }
             }
@@ -1027,6 +1038,8 @@ public class DTree extends Iced {
                 nRight = whi[best] + wNA;
                 predLeft = wYlo[best];
                 predRight = wYhi[best] + wYNA;
+                denNALeft = 0;
+                denNARight = denNA;
                 nasplit = DHistogram.NASplitDir.NARight;
               }
             }
@@ -1061,9 +1074,9 @@ public class DTree extends Iced {
     final double node_p0 = predLeft / nLeft;
     final double node_p1 = predRight / nRight;
 
-    double tree_p0 = vals_dim == 6 ? predLeft / denlo[best] : node_p0;
-    double tree_p1 = vals_dim == 6 ? predRight / denhi[best] : node_p1;
-    
+    double tree_p0 = vals_dim == 6 ? predLeft / (denlo[best] + denNALeft) : node_p0;
+    double tree_p1 = vals_dim == 6 ? predRight / (denhi[best] + denNARight) : node_p1;
+
     if (constraint != 0) {
       if (constraint * tree_p0 > constraint * tree_p1) {
         if (SharedTree.DEV_DEBUG) Log.info("can't split " + hs._name + ": split would violate monotone constraint.");
