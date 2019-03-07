@@ -846,7 +846,7 @@ public class DTree extends Iced {
     double wYYlo[] = MemoryManager.malloc8d(nbins+1);
     double pr1lo[] = vals_dim >= 5 ? MemoryManager.malloc8d(nbins+1) : null;
     double pr2lo[] = vals_dim >= 5 ? MemoryManager.malloc8d(nbins+1) : null;
-    double denlo[] = vals_dim == 6 ? MemoryManager.malloc8d(nbins+1) : null;
+    double denlo[] = vals_dim == 6 ? MemoryManager.malloc8d(nbins+1) : wlo;
     for( int b=1; b<=nbins; b++ ) {
       int id = vals_dim*(b-1);
       double n0 =   wlo[b-1], n1 = vals[id+0];
@@ -887,12 +887,6 @@ public class DTree extends Iced {
     }
 
     final double denNA = vals_dim == 6 ? hs._vals[hs._vals_dim*hs._nbin+5] : 0;
-    if (wNA > 0) {
-      System.out.println();
-    }
-    
-    double denNARight = 0;
-    double denNALeft = 0;
     
     // Compute mean/var for cumulative bins from nbins to 0 inclusive.
     double   whi[] = MemoryManager.malloc8d(nbins+1);
@@ -900,7 +894,7 @@ public class DTree extends Iced {
     double wYYhi[] = MemoryManager.malloc8d(nbins+1);
     double pr1hi[] = vals_dim >= 5 ? MemoryManager.malloc8d(nbins+1) : null;
     double pr2hi[] = vals_dim >= 5 ? MemoryManager.malloc8d(nbins+1) : null;
-    double denhi[] = vals_dim == 6 ? MemoryManager.malloc8d(nbins+1) : null;
+    double denhi[] = vals_dim == 6 ? MemoryManager.malloc8d(nbins+1) : whi;
     for( int b=nbins-1; b>=0; b-- ) {
       double n0 =   whi[b+1], n1 = vals[vals_dim*b];
       if( n0==0 && n1==0 )
@@ -936,6 +930,8 @@ public class DTree extends Iced {
     double nRight = 0;
     double predLeft = 0;
     double predRight = 0;
+    double denRight = 0;
+    double denLeft = 0;
 
     // if there are any NAs, then try to split them from the non-NAs
     if (wNA>=min_rows) {
@@ -950,7 +946,8 @@ public class DTree extends Iced {
       predLeft = wYhi[0];
       nRight = wNA;
       predRight = wYNA;
-      denNARight = denNA;
+      denLeft = denhi[0];
+      denRight = denNA;
     }
 
     // Now roll the split-point across the bins.  There are 2 ways to do this:
@@ -989,6 +986,8 @@ public class DTree extends Iced {
             nRight = whi[best];
             predLeft = wYlo[best];
             predRight = wYhi[best];
+            denLeft = denlo[best];
+            denRight = denhi[best];
           }
         }
       } else {
@@ -1011,8 +1010,8 @@ public class DTree extends Iced {
                 nRight = whi[best];
                 predLeft = wYlo[best] + wYNA;
                 predRight = wYhi[best];
-                denNALeft = denNA;
-                denNARight = 0;
+                denLeft = denlo[best] + denNA;
+                denRight = denhi[best];
                 nasplit = DHistogram.NASplitDir.NALeft;
               }
             }
@@ -1038,8 +1037,8 @@ public class DTree extends Iced {
                 nRight = whi[best] + wNA;
                 predLeft = wYlo[best];
                 predRight = wYhi[best] + wYNA;
-                denNALeft = 0;
-                denNARight = denNA;
+                denLeft = denlo[best];
+                denRight = denhi[best] + denNA;
                 nasplit = DHistogram.NASplitDir.NARight;
               }
             }
@@ -1074,8 +1073,8 @@ public class DTree extends Iced {
     final double node_p0 = predLeft / nLeft;
     final double node_p1 = predRight / nRight;
 
-    double tree_p0 = vals_dim == 6 ? predLeft / (denlo[best] + denNALeft) : node_p0;
-    double tree_p1 = vals_dim == 6 ? predRight / (denhi[best] + denNARight) : node_p1;
+    double tree_p0 = vals_dim == 6 ? predLeft / denLeft : node_p0;
+    double tree_p1 = vals_dim == 6 ? predRight / denRight : node_p1;
 
     if (constraint != 0) {
       if (constraint * tree_p0 > constraint * tree_p1) {
