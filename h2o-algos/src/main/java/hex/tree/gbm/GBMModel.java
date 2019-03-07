@@ -44,7 +44,14 @@ public class GBMModel extends SharedTreeModel<GBMModel, GBMModel.GBMParameters, 
 
     Constraints constraints(Frame f) {
       if (_monotone_constraints == null || _monotone_constraints.length == 0) {
-        return null;
+        final boolean activate = _distribution == DistributionFamily.gaussian ||
+                _distribution == DistributionFamily.bernoulli;
+        return new Constraints(new int[f.numCols()], _distribution, activate) {
+          @Override
+          public boolean needsGammaDenum() {
+            return activate;
+          }
+        };
       }
       int[] cs = new int[f.numCols()];
       for (KeyValue spec : _monotone_constraints) {

@@ -39,7 +39,7 @@ public class Constraints extends Iced<Constraints> {
     return _use_bounds;
   }
 
-  boolean needsGammaDenum() {
+  public boolean needsGammaDenum() {
     return !_dist.equals(DistributionFamily.gaussian);
   }
   
