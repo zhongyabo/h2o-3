@@ -471,7 +471,10 @@ public abstract class SharedTree<M extends SharedTreeModel<M,P,O>, P extends Sha
       // Build a frame with just a single tree (& work & nid) columns, so the
       // nested MRTask ScoreBuildHistogram in ScoreBuildOneTree does not try
       // to close other tree's Vecs when run in parallel.
-      Frame fr2 = new Frame(Arrays.copyOf(fr._names,_ncols+1), Arrays.copyOf(vecs,_ncols+1)); //predictors and actual response
+      Frame fr2 = new Frame(Arrays.copyOf(fr._names,_ncols+1), Arrays.copyOf(vecs,_ncols+1)); //predictors, weights and the actual response
+      if (isSupervised() && fr2.find(_parms._response_column) == -1) {
+        fr2.add(_parms._response_column, fr.vec(_parms._response_column));
+      }
 
       // Add temporary workspace vectors (optional weights are taken over from fr)
       int respIdx = fr2.find(_parms._response_column);
