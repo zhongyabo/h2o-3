@@ -43,6 +43,7 @@ public class GBMV3 extends SharedTreeV3<GBM,GBMV3,GBMV3.GBMParametersV3> {
       "stopping_tolerance",
       "max_runtime_secs",
       "seed",
+      "seed_string",      
       "build_tree_one_node",
       "learn_rate",
       "learn_rate_annealing",

@@ -209,11 +209,13 @@ public abstract class Model<M extends Model<M,P,O>, P extends Model.Parameters, 
       boolean needsResponse() { return _needResponse; }
     }
     public long _seed = -1;
+    public String _seed_string = "-1";
     public long getOrMakeRealSeed(){
       while (_seed==-1) {
         _seed = RandomUtils.getRNG(System.nanoTime()).nextLong();
         Log.debug("Auto-generated time-based seed for pseudo-random number generator (because it was set to -1): " + _seed);
       }
+      _seed_string = Long.toString(_seed);
       return _seed;
     }
     public FoldAssignmentScheme _fold_assignment = FoldAssignmentScheme.AUTO;

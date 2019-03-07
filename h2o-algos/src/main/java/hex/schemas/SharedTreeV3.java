@@ -69,6 +69,9 @@ public class SharedTreeV3<B extends SharedTree, S extends SharedTreeV3<B,S,P>, P
     @API(help = "Seed for pseudo random number generator (if applicable)", gridable = true)
     public long seed;
 
+    @API(help = "Seed for pseudo random number generator (if applicable) in string", gridable = true)
+    public String seed_string;
+
     @API(help="Run on one node only; no network overhead but fewer cpus used.  Suitable for small datasets.", level = API.Level.expert, gridable = false)
     public boolean build_tree_one_node;
 

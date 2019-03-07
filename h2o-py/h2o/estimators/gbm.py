@@ -34,9 +34,9 @@ class H2OGradientBoostingEstimator(H2OEstimator):
                       "balance_classes", "class_sampling_factors", "max_after_balance_size",
                       "max_confusion_matrix_size", "max_hit_ratio_k", "ntrees", "max_depth", "min_rows", "nbins",
                       "nbins_top_level", "nbins_cats", "r2_stopping", "stopping_rounds", "stopping_metric",
-                      "stopping_tolerance", "max_runtime_secs", "seed", "build_tree_one_node", "learn_rate",
-                      "learn_rate_annealing", "distribution", "quantile_alpha", "tweedie_power", "huber_alpha",
-                      "checkpoint", "sample_rate", "sample_rate_per_class", "col_sample_rate",
+                      "stopping_tolerance", "max_runtime_secs", "seed", "seed_string", "build_tree_one_node",
+                      "learn_rate", "learn_rate_annealing", "distribution", "quantile_alpha", "tweedie_power",
+                      "huber_alpha", "checkpoint", "sample_rate", "sample_rate_per_class", "col_sample_rate",
                       "col_sample_rate_change_per_level", "col_sample_rate_per_tree", "min_split_improvement",
                       "histogram_type", "max_abs_leafnode_pred", "pred_noise_bandwidth", "categorical_encoding",
                       "calibrate_model", "calibration_frame", "custom_metric_func", "export_checkpoints_dir",
@@ -545,6 +545,21 @@ class H2OGradientBoostingEstimator(H2OEstimator):
     def seed(self, seed):
         assert_is_type(seed, None, int)
         self._parms["seed"] = seed
+
+
+    @property
+    def seed_string(self):
+        """
+        Seed for pseudo random number generator (if applicable) in string
+
+        Type: ``str``  (default: ``"-1"``).
+        """
+        return self._parms.get("seed_string")
+
+    @seed_string.setter
+    def seed_string(self, seed_string):
+        assert_is_type(seed_string, None, str)
+        self._parms["seed_string"] = seed_string
 
 
     @property
