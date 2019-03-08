@@ -188,6 +188,16 @@ class H2OSingularValueDecompositionEstimator(H2OEstimator):
 
 
     @property
+    def seed_string(self):
+        """
+        RNG seed for k-means++ initialization as string
+
+        Type: ``str``  (default: ``"-1"``).
+        """
+        if self._parms.get("seed") is not None: return str(self._parms.get("seed"))
+        return None
+
+    @property
     def keep_u(self):
         """
         Save left singular vectors?

@@ -22,7 +22,8 @@ public class GLMV3 extends ModelBuilderSchema<GLM,GLMV3,GLMV3.GLMParametersV3> {
             "training_frame",
             "validation_frame",
             "nfolds",
-            "seed",
+            "seed", 
+            "seed_string", 
             "keep_cross_validation_models",
             "keep_cross_validation_predictions",
             "keep_cross_validation_fold_assignment",
@@ -72,8 +73,14 @@ public class GLMV3 extends ModelBuilderSchema<GLM,GLMV3,GLMV3.GLMParametersV3> {
             "custom_metric_func"
     };
 
-    @API(help = "Seed for pseudo random number generator (if applicable)", gridable = true)
+    @API(help = "Seed for pseudo random number generator (if applicable).", gridable = true)
     public long seed;
+
+    /**
+     * The same as seed, user can get string value to be sure to use correct value to reproduce results.
+     */
+    @API(help = "Seed for pseudo random number generator (if applicable) as string.", level = API.Level.expert, gridable = true, direction = API.Direction.OUTPUT)
+    public String seed_string;
 
     // Input fields
     @API(help = "Family. Use binomial for classification with logistic regression, others are for regression problems.", values = {"gaussian", "binomial","quasibinomial","ordinal", "multinomial", "poisson", "gamma", "tweedie"}, level = Level.critical)
@@ -95,10 +102,10 @@ public class GLMV3 extends ModelBuilderSchema<GLM,GLMV3,GLMV3.GLMParametersV3> {
     @API(help = "Regularization strength", required = false, level = Level.critical, gridable = true)
     public double[] lambda;
 
-    @API(help = "Use lambda search starting at lambda max, given lambda is then interpreted as lambda min", level = Level.critical)
+    @API(help = "Use lambda search starting at lambda max, given lambda is then interpreted as lambda min.", level = Level.critical)
     public boolean lambda_search;
 
-    @API(help="Stop early when there is no more relative improvement on train or validation (if provided)")
+    @API(help="Stop early when there is no more relative improvement on train or validation (if provided).")
     public boolean early_stopping;
 
     @API(help = "Number of lambdas to be used in a search." +
@@ -107,19 +114,19 @@ public class GLMV3 extends ModelBuilderSchema<GLM,GLMV3,GLMV3.GLMParametersV3> {
     " are needed for ridge regression) otherwise it is set to 100.", level = Level.critical)
     public int nlambdas;
 
-    @API(help = "Standardize numeric columns to have zero mean and unit variance", level = Level.critical)
+    @API(help = "Standardize numeric columns to have zero mean and unit variance.", level = Level.critical)
     public boolean standardize;
 
     @API(help = "Handling of missing values. Either MeanImputation or Skip.", values = { "MeanImputation", "Skip" }, level = API.Level.expert, direction=API.Direction.INOUT, gridable = true)
     public DeepLearningParameters.MissingValuesHandling missing_values_handling;
 
-    @API(help = "Restrict coefficients (not intercept) to be non-negative")
+    @API(help = "Restrict coefficients (not intercept) to be non-negative.")
     public boolean non_negative;
 
-    @API(help = "Maximum number of iterations", level = Level.secondary)
+    @API(help = "Maximum number of iterations.", level = Level.secondary)
     public int max_iterations;
 
-    @API(help = "Converge if  beta changes less (using L-infinity norm) than beta esilon, ONLY applies to IRLSM solver ", level = Level.expert)
+    @API(help = "Converge if  beta changes less (using L-infinity norm) than beta esilon, ONLY applies to IRLSM solver.", level = Level.expert)
     public double beta_epsilon;
 
     @API(help = "Converge if  objective value changes less than this."+ " Default indicates: If lambda_search"+
@@ -134,7 +141,7 @@ public class GLMV3 extends ModelBuilderSchema<GLM,GLMV3,GLMV3.GLMParametersV3> {
     " the conditional values above are 1E-8 and 1E-6 respectively.", level = Level.expert)
     public double gradient_epsilon;
 
-    @API(help="Likelihood divider in objective value computation, default is 1/nobs")
+    @API(help="Likelihood divider in objective value computation, default is 1/nobs.")
     public double obj_reg;
 
     @API(help = "", level = Level.secondary, values = {"family_default", "identity", "logit", "log", "inverse",
@@ -205,13 +212,13 @@ public class GLMV3 extends ModelBuilderSchema<GLM,GLMV3,GLMV3.GLMParametersV3> {
     /**
      * The maximum number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable)
      */
-    @API(help = "Maximum number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable)", level = API.Level.secondary, direction=API.Direction.INOUT)
+    @API(help = "Maximum number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable).", level = API.Level.secondary, direction=API.Direction.INOUT)
     public int max_hit_ratio_k;
 
-    @API(help="Request p-values computation, p-values work only with IRLSM solver and no regularization", level = Level.secondary, direction = Direction.INPUT)
+    @API(help="Request p-values computation, p-values work only with IRLSM solver and no regularization.", level = Level.secondary, direction = Direction.INPUT)
     public boolean compute_p_values; // _remove_collinear_columns
 
-    @API(help="In case of linearly dependent columns, remove some of the dependent columns", level = Level.secondary, direction = Direction.INPUT)
+    @API(help="In case of linearly dependent columns, remove some of the dependent columns.", level = Level.secondary, direction = Direction.INPUT)
     public boolean remove_collinear_columns; // _remove_collinear_columns
 
     /////////////////////

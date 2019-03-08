@@ -64,7 +64,7 @@ class H2ONaiveBayesEstimator(H2OEstimator):
     @property
     def seed(self):
         """
-        Seed for pseudo random number generator (only used for cross-validation and fold_assignment="Random" or "AUTO")
+        Seed for pseudo random number generator (only used for cross-validation and fold_assignment="Random" or "AUTO").
 
         Type: ``int``  (default: ``-1``).
         """
@@ -75,6 +75,17 @@ class H2ONaiveBayesEstimator(H2OEstimator):
         assert_is_type(seed, None, int)
         self._parms["seed"] = seed
 
+
+    @property
+    def seed_string(self):
+        """
+        Seed for pseudo random number generator (only used for cross-validation and fold_assignment="Random" or "AUTO")
+        as string.
+
+        Type: ``str``  (default: ``"-1"``).
+        """
+        if self._parms.get("seed") is not None: return str(self._parms.get("seed"))
+        return None
 
     @property
     def fold_assignment(self):
@@ -292,7 +303,7 @@ class H2ONaiveBayesEstimator(H2OEstimator):
     @property
     def max_confusion_matrix_size(self):
         """
-        [Deprecated] Maximum size (# classes) for confusion matrices to be printed in the Logs
+        [Deprecated] Maximum size (# classes) for confusion matrices to be printed in the Logs.
 
         Type: ``int``  (default: ``20``).
         """
@@ -307,7 +318,7 @@ class H2ONaiveBayesEstimator(H2OEstimator):
     @property
     def max_hit_ratio_k(self):
         """
-        Max. number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable)
+        Max. number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable).
 
         Type: ``int``  (default: ``0``).
         """
@@ -322,7 +333,7 @@ class H2ONaiveBayesEstimator(H2OEstimator):
     @property
     def laplace(self):
         """
-        Laplace smoothing parameter
+        Laplace smoothing parameter.
 
         Type: ``float``  (default: ``0``).
         """
@@ -337,7 +348,7 @@ class H2ONaiveBayesEstimator(H2OEstimator):
     @property
     def min_sdev(self):
         """
-        Min. standard deviation to use for observations with not enough data
+        Min. standard deviation to use for observations with not enough data.
 
         Type: ``float``  (default: ``0.001``).
         """
@@ -352,7 +363,7 @@ class H2ONaiveBayesEstimator(H2OEstimator):
     @property
     def eps_sdev(self):
         """
-        Cutoff below which standard deviation is replaced with min_sdev
+        Cutoff below which standard deviation is replaced with min_sdev.
 
         Type: ``float``  (default: ``0``).
         """
@@ -367,7 +378,7 @@ class H2ONaiveBayesEstimator(H2OEstimator):
     @property
     def min_prob(self):
         """
-        Min. probability to use for observations with not enough data
+        Min. probability to use for observations with not enough data.
 
         Type: ``float``  (default: ``0.001``).
         """
@@ -382,7 +393,7 @@ class H2ONaiveBayesEstimator(H2OEstimator):
     @property
     def eps_prob(self):
         """
-        Cutoff below which probability is replaced with min_prob
+        Cutoff below which probability is replaced with min_prob.
 
         Type: ``float``  (default: ``0``).
         """
@@ -397,7 +408,7 @@ class H2ONaiveBayesEstimator(H2OEstimator):
     @property
     def compute_metrics(self):
         """
-        Compute metrics on training data
+        Compute metrics on training data.
 
         Type: ``bool``  (default: ``True``).
         """

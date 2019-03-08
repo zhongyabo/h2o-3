@@ -48,27 +48,28 @@
 #'        represents Lasso regression, a value of 0 produces Ridge regression, and anything in between specifies the
 #'        amount of mixing between the two. Default value of alpha is 0 when SOLVER = 'L-BFGS'; 0.5 otherwise.
 #' @param lambda Regularization strength
-#' @param lambda_search \code{Logical}. Use lambda search starting at lambda max, given lambda is then interpreted as lambda min
+#' @param lambda_search \code{Logical}. Use lambda search starting at lambda max, given lambda is then interpreted as lambda min.
 #'        Defaults to FALSE.
-#' @param early_stopping \code{Logical}. Stop early when there is no more relative improvement on train or validation (if provided)
+#' @param early_stopping \code{Logical}. Stop early when there is no more relative improvement on train or validation (if provided).
 #'        Defaults to TRUE.
 #' @param nlambdas Number of lambdas to be used in a search. Default indicates: If alpha is zero, with lambda search set to True,
 #'        the value of nlamdas is set to 30 (fewer lambdas are needed for ridge regression) otherwise it is set to 100.
 #'        Defaults to -1.
-#' @param standardize \code{Logical}. Standardize numeric columns to have zero mean and unit variance Defaults to TRUE.
+#' @param standardize \code{Logical}. Standardize numeric columns to have zero mean and unit variance. Defaults to TRUE.
 #' @param missing_values_handling Handling of missing values. Either MeanImputation or Skip. Must be one of: "MeanImputation", "Skip". Defaults
 #'        to MeanImputation.
-#' @param compute_p_values \code{Logical}. Request p-values computation, p-values work only with IRLSM solver and no regularization
+#' @param compute_p_values \code{Logical}. Request p-values computation, p-values work only with IRLSM solver and no regularization.
 #'        Defaults to FALSE.
-#' @param remove_collinear_columns \code{Logical}. In case of linearly dependent columns, remove some of the dependent columns Defaults to FALSE.
+#' @param remove_collinear_columns \code{Logical}. In case of linearly dependent columns, remove some of the dependent columns. Defaults to
+#'        FALSE.
 #' @param intercept \code{Logical}. Include constant term in the model Defaults to TRUE.
-#' @param non_negative \code{Logical}. Restrict coefficients (not intercept) to be non-negative Defaults to FALSE.
-#' @param max_iterations Maximum number of iterations Defaults to -1.
+#' @param non_negative \code{Logical}. Restrict coefficients (not intercept) to be non-negative. Defaults to FALSE.
+#' @param max_iterations Maximum number of iterations. Defaults to -1.
 #' @param objective_epsilon Converge if  objective value changes less than this. Default indicates: If lambda_search is set to True the
 #'        value of objective_epsilon is set to .0001. If the lambda_search is set to False and lambda is equal to zero,
 #'        the value of objective_epsilon is set to .000001, for any other value of lambda the default value of
 #'        objective_epsilon is set to .0001. Defaults to -1.
-#' @param beta_epsilon Converge if  beta changes less (using L-infinity norm) than beta esilon, ONLY applies to IRLSM solver
+#' @param beta_epsilon Converge if  beta changes less (using L-infinity norm) than beta esilon, ONLY applies to IRLSM solver.
 #'        Defaults to 0.0001.
 #' @param gradient_epsilon Converge if  objective changes less (using L-infinity norm) than this, ONLY applies to L-BFGS solver. Default
 #'        indicates: If lambda_search is set to False and lambda is equal to zero, the default value of gradient_epsilon
@@ -88,7 +89,7 @@
 #'        max_active_predictors is set to 5000 otherwise it is set to 100000000. Defaults to -1.
 #' @param interactions A list of predictor column indices to interact. All pairwise combinations will be computed for the list.
 #' @param interaction_pairs A list of pairwise (first order) column interactions.
-#' @param obj_reg Likelihood divider in objective value computation, default is 1/nobs Defaults to -1.
+#' @param obj_reg Likelihood divider in objective value computation, default is 1/nobs. Defaults to -1.
 #' @param export_checkpoints_dir Automatically export generated models to this directory.
 #' @param balance_classes \code{Logical}. Balance training data class counts via over/under-sampling (for imbalanced data). Defaults to
 #'        FALSE.
@@ -96,7 +97,7 @@
 #'        be automatically computed to obtain class balance during training. Requires balance_classes.
 #' @param max_after_balance_size Maximum relative size of the training data after balancing class counts (can be less than 1.0). Requires
 #'        balance_classes. Defaults to 5.0.
-#' @param max_hit_ratio_k Maximum number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable)
+#' @param max_hit_ratio_k Maximum number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable).
 #'        Defaults to 0.
 #' @param max_runtime_secs Maximum allowed runtime in seconds for model training. Use 0 to disable. Defaults to 0.
 #' @param custom_metric_func Reference to custom evaluation function, format: `language:keyName=funcName`

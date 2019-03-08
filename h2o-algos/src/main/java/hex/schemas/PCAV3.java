@@ -26,6 +26,7 @@ public class PCAV3 extends ModelBuilderSchema<PCA,PCAV3,PCAV3.PCAParametersV3> {
         "compute_metrics",
         "impute_missing",
         "seed",
+        "seed_string",    
         "max_runtime_secs",
         "export_checkpoints_dir"
     };
@@ -62,6 +63,9 @@ public class PCAV3 extends ModelBuilderSchema<PCA,PCAV3,PCAV3.PCAParametersV3> {
 
     @API(help = "RNG seed for initialization", direction = API.Direction.INOUT)
     public long seed;
+
+    @API(help = "RNG seed for initialization as string", direction = API.Direction.OUTPUT, level = API.Level.expert)
+    public String seed_string;
 
     @API(help = "Whether first factor level is included in each categorical expansion", direction = API.Direction.INOUT)
     public boolean use_all_factor_levels;

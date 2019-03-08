@@ -133,7 +133,7 @@ def gen_module(schema, algo):
         if (pname==u'distribution') and (not(algo==u'glm')):    # ordinal only in glm
             enum_values.remove(u'ordinal')
         if pname in reserved_words: pname += "_"
-        param_names.append(pname)
+        if pname != u'seed_string': param_names.append(pname)
         param["pname"] = pname
         param["ptype"] = translate_type_for_check(param["type"], enum_values)
         param["dtype"] = translate_type_for_doc(param["type"], enum_values)
@@ -234,7 +234,10 @@ def gen_module(schema, algo):
         if pname == "metalearner_params":
             yield "        Example: metalearner_gbm_params = {'max_depth': 2, 'col_sample_rate': 0.3}"
         yield '        """'
-        if pname != "metalearner_params":
+        if pname == "seed_string":
+            yield "        if self._parms.get(\"seed\") is not None: return str(self._parms.get(\"seed\"))"
+            yield "        return None"
+        elif pname != "metalearner_params":
             yield "        return self._parms.get(\"%s\")" % sname
         else:
             yield "        if self._parms.get(\"%s\") != None:" % sname
@@ -246,37 +249,38 @@ def gen_module(schema, algo):
             yield "        else:"
             yield "            return self._parms.get(\"%s\")" % sname
         yield ""
-        yield "    @%s.setter" % pname
-        yield "    def %s(self, %s):" % (pname, pname)
-        if pname in {"initial_weights", "initial_biases"}:
-            yield "        assert_is_type(%s, None, [H2OFrame, None])" % pname
-        elif pname in {"alpha", "lambda_"} and ptype == "[numeric]":
-            # For `alpha` and `lambda` the server reports type float[], while in practice simple floats are also ok
-            yield "        assert_is_type(%s, None, numeric, [numeric])" % pname
-        elif pname in {"checkpoint", "pretrained_autoencoder"}:
-            yield "        assert_is_type(%s, None, str, H2OEstimator)" % pname
-        elif pname in {"base_models"}:
-            yield "         if is_type(base_models,[H2OEstimator]):"
-            yield      "            %s = [b.model_id for b in %s]" % (pname,pname)
-            yield      "            self._parms[\"%s\"] = %s" % (sname, pname)
-            yield "         else:"
-            yield "            assert_is_type(%s, None, %s)" % (pname, ptype)
-            yield "            self._parms[\"%s\"] = %s" % (sname, pname)
-        elif pname in {"metalearner_params"}:
-            yield "        assert_is_type(%s, None, %s)" % (pname, "dict")
-            yield '        if %s is not None and %s != "":' % (pname, pname)
-            yield "            for k in %s:" % (pname)
-            yield '                if ("[" and "]") not in str(metalearner_params[k]):'
-            yield "                    metalearner_params[k]=[metalearner_params[k]]"
-            yield "            self._parms[\"%s\"] = str(json.dumps(%s))" % (sname, pname)
-            yield "        else:"
-            yield "            self._parms[\"%s\"] = None" % (sname)
-        else:
-            yield "        assert_is_type(%s, None, %s)" % (pname, ptype)
-        if pname not in {"base_models", "metalearner_params"}:
-            yield "        self._parms[\"%s\"] = %s" % (sname, pname)
-        yield ""
-        yield ""
+        if(pname != "seed_string"):
+            yield "    @%s.setter" % pname
+            yield "    def %s(self, %s):" % (pname, pname)
+            if pname in {"initial_weights", "initial_biases"}:
+                yield "        assert_is_type(%s, None, [H2OFrame, None])" % pname
+            elif pname in {"alpha", "lambda_"} and ptype == "[numeric]":
+                # For `alpha` and `lambda` the server reports type float[], while in practice simple floats are also ok
+                yield "        assert_is_type(%s, None, numeric, [numeric])" % pname
+            elif pname in {"checkpoint", "pretrained_autoencoder"}:
+                yield "        assert_is_type(%s, None, str, H2OEstimator)" % pname
+            elif pname in {"base_models"}:
+                yield "         if is_type(base_models,[H2OEstimator]):"
+                yield      "            %s = [b.model_id for b in %s]" % (pname,pname)
+                yield      "            self._parms[\"%s\"] = %s" % (sname, pname)
+                yield "         else:"
+                yield "            assert_is_type(%s, None, %s)" % (pname, ptype)
+                yield "            self._parms[\"%s\"] = %s" % (sname, pname)
+            elif pname in {"metalearner_params"}:
+                yield "        assert_is_type(%s, None, %s)" % (pname, "dict")
+                yield '        if %s is not None and %s != "":' % (pname, pname)
+                yield "            for k in %s:" % (pname)
+                yield '                if ("[" and "]") not in str(metalearner_params[k]):'
+                yield "                    metalearner_params[k]=[metalearner_params[k]]"
+                yield "            self._parms[\"%s\"] = str(json.dumps(%s))" % (sname, pname)
+                yield "        else:"
+                yield "            self._parms[\"%s\"] = None" % (sname)
+            else:
+                yield "        assert_is_type(%s, None, %s)" % (pname, ptype)
+            if pname not in {"base_models", "metalearner_params"}:
+                yield "        self._parms[\"%s\"] = %s" % (sname, pname)
+                yield ""
+                yield ""
     if class_extra:
         yield ""
         yield "    " + reindent_block(class_extra, 4)

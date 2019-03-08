@@ -44,6 +44,7 @@ public class DeepLearningV3 extends ModelBuilderSchema<DeepLearning,DeepLearning
         "train_samples_per_iteration",
         "target_ratio_comm_to_comp",
         "seed",
+        "seed_string",    
         "adaptive_rate",
         "rho",
         "epsilon",
@@ -228,6 +229,12 @@ public class DeepLearningV3 extends ModelBuilderSchema<DeepLearning,DeepLearning
         help = "Seed for random numbers (affects sampling) - Note: only reproducible when running single threaded.")
     public long seed;
 
+    /**
+     * The same as seed, user can get string value to be sure to use correct value to reproduce results.
+     */
+    @API(level = API.Level.expert, gridable = true, direction = API.Direction.OUTPUT,
+        help = "Seed for random numbers (affects sampling) as string.")
+    public String seed_string;
 
     /*Adaptive Learning Rate*/
 

@@ -129,8 +129,6 @@ class H2OStackedEnsembleEstimator(H2OEstimator):
          else:
             assert_is_type(base_models, None, [str])
             self._parms["base_models"] = base_models
-
-
     @property
     def metalearner_algorithm(self):
         """
@@ -238,12 +236,10 @@ class H2OStackedEnsembleEstimator(H2OEstimator):
             self._parms["metalearner_params"] = str(json.dumps(metalearner_params))
         else:
             self._parms["metalearner_params"] = None
-
-
     @property
     def seed(self):
         """
-        Seed for random numbers; passed through to the metalearner algorithm. Defaults to -1 (time-based random number)
+        Seed for random numbers; passed through to the metalearner algorithm. Defaults to -1 (time-based random number).
 
         Type: ``int``  (default: ``-1``).
         """
@@ -254,6 +250,17 @@ class H2OStackedEnsembleEstimator(H2OEstimator):
         assert_is_type(seed, None, int)
         self._parms["seed"] = seed
 
+
+    @property
+    def seed_string(self):
+        """
+        Seed for random numbers; passed through to the metalearner algorithm. Defaults to -1 (time-based random number)
+        as string.
+
+        Type: ``str``  (default: ``"-1"``).
+        """
+        if self._parms.get("seed") is not None: return str(self._parms.get("seed"))
+        return None
 
     @property
     def export_checkpoints_dir(self):

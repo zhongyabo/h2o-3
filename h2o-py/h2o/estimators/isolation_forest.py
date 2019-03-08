@@ -181,7 +181,7 @@ class H2OIsolationForestEstimator(H2OEstimator):
     @property
     def seed(self):
         """
-        Seed for pseudo random number generator (if applicable)
+        Seed for pseudo random number generator (if applicable).
 
         Type: ``int``  (default: ``-1``).
         """
@@ -259,7 +259,7 @@ class H2OIsolationForestEstimator(H2OEstimator):
     @property
     def col_sample_rate_change_per_level(self):
         """
-        Relative change of the column sampling rate for every level (must be > 0.0 and <= 2.0)
+        Relative change of the column sampling rate for every level (must be > 0.0 and <= 2.0).
 
         Type: ``float``  (default: ``1``).
         """
@@ -274,7 +274,7 @@ class H2OIsolationForestEstimator(H2OEstimator):
     @property
     def col_sample_rate_per_tree(self):
         """
-        Column sample rate per tree (from 0.0 to 1.0)
+        Column sample rate per tree (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``1``).
         """

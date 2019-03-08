@@ -75,25 +75,25 @@ public class GBMV3 extends SharedTreeV3<GBM,GBMV3,GBMV3.GBMParametersV3> {
     };
 
     // Input fields
-    @API(help="Learning rate (from 0.0 to 1.0)", gridable = true)
+    @API(help="Learning rate (from 0.0 to 1.0).", gridable = true)
     public double learn_rate;
 
-    @API(help="Scale the learning rate by this factor after each tree (e.g., 0.99 or 0.999) ", level = API.Level.secondary, gridable = true)
+    @API(help="Scale the learning rate by this factor after each tree (e.g., 0.99 or 0.999).", level = API.Level.secondary, gridable = true)
     public double learn_rate_annealing;
 
-    @API(help = "Row sample rate per tree (from 0.0 to 1.0)", gridable = true)
+    @API(help = "Row sample rate per tree (from 0.0 to 1.0).", gridable = true)
     public double sample_rate;
 
-    @API(help="Column sample rate (from 0.0 to 1.0)", level = API.Level.critical, gridable = true)
+    @API(help="Column sample rate (from 0.0 to 1.0).", level = API.Level.critical, gridable = true)
     public double col_sample_rate;
 
     @API(help = "A mapping representing monotonic constraints. Use +1 to enforce an increasing constraint and -1 to specify a decreasing constraint.", level = API.Level.secondary)
     public KeyValueV3[] monotone_constraints;
 
-    @API(help="Maximum absolute value of a leaf node prediction", level = API.Level.expert, gridable = true)
+    @API(help="Maximum absolute value of a leaf node prediction.", level = API.Level.expert, gridable = true)
     public double max_abs_leafnode_pred;
 
-    @API(help="Bandwidth (sigma) of Gaussian multiplicative noise ~N(1,sigma) for tree node predictions", level = API.Level.expert, gridable = true)
+    @API(help="Bandwidth (sigma) of Gaussian multiplicative noise ~N(1,sigma) for tree node predictions.", level = API.Level.expert, gridable = true)
     public double pred_noise_bandwidth;
 
 //    // TODO debug only, remove!

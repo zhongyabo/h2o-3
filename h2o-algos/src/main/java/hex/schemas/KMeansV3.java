@@ -28,6 +28,7 @@ public class KMeansV3 extends ClusteringModelBuilderSchema<KMeans,KMeansV3,KMean
         "max_iterations",
         "standardize",
         "seed",
+        "seed_string",    
         "init",
         "max_runtime_secs",
         "categorical_encoding",
@@ -48,6 +49,9 @@ public class KMeansV3 extends ClusteringModelBuilderSchema<KMeans,KMeansV3,KMean
 
     @API(help = "RNG Seed", level = API.Level.secondary /* tested, works: , dependsOn = {"k", "max_iterations"} */, gridable = true)
     public long seed;
+
+    @API(help = "RNG Seed as string", level = API.Level.expert, gridable = true, direction = API.Direction.OUTPUT)
+    public String seed_string;
 
     @API(help = "Initialization mode", values = { "Random", "PlusPlus", "Furthest", "User" }, gridable = true) // TODO: pull out of categorical class. . .
     public KMeans.Initialization init;

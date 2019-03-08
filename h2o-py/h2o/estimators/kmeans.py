@@ -300,6 +300,16 @@ class H2OKMeansEstimator(H2OEstimator):
 
 
     @property
+    def seed_string(self):
+        """
+        RNG Seed as string
+
+        Type: ``str``  (default: ``"-1"``).
+        """
+        if self._parms.get("seed") is not None: return str(self._parms.get("seed"))
+        return None
+
+    @property
     def init(self):
         """
         Initialization mode

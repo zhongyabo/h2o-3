@@ -41,6 +41,7 @@ public class DRFV3 extends SharedTreeV3<DRF, DRFV3, DRFV3.DRFParametersV3> {
                 "stopping_tolerance",
                 "max_runtime_secs",
                 "seed",
+                "seed_string",
                 "build_tree_one_node",
                 "mtries",
                 "sample_rate",
@@ -60,13 +61,13 @@ public class DRFV3 extends SharedTreeV3<DRF, DRFV3, DRFV3.DRFParametersV3> {
         };
 
         // Input fields
-        @API(help = "Number of variables randomly sampled as candidates at each split. If set to -1, defaults to sqrt{p} for classification and p/3 for regression (where p is the # of predictors", gridable = true)
+        @API(help = "Number of variables randomly sampled as candidates at each split. If set to -1, defaults to sqrt{p} for classification and p/3 for regression (where p is the # of predictors.", gridable = true)
         public int mtries;
 
         @API(help = "For binary classification: Build 2x as many trees (one per class) - can lead to higher accuracy.", level = API.Level.expert)
         public boolean binomial_double_trees;
 
-        @API(help = "Row sample rate per tree (from 0.0 to 1.0)", gridable = true)
+        @API(help = "Row sample rate per tree (from 0.0 to 1.0).", gridable = true)
         public double sample_rate;
     }
 }

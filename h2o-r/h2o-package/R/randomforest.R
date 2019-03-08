@@ -37,20 +37,20 @@
 #'        be automatically computed to obtain class balance during training. Requires balance_classes.
 #' @param max_after_balance_size Maximum relative size of the training data after balancing class counts (can be less than 1.0). Requires
 #'        balance_classes. Defaults to 5.0.
-#' @param max_hit_ratio_k Max. number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable)
+#' @param max_hit_ratio_k Max. number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable).
 #'        Defaults to 0.
 #' @param ntrees Number of trees. Defaults to 50.
 #' @param max_depth Maximum tree depth. Defaults to 20.
 #' @param min_rows Fewest allowed (weighted) observations in a leaf. Defaults to 1.
-#' @param nbins For numerical columns (real/int), build a histogram of (at least) this many bins, then split at the best point
-#'        Defaults to 20.
+#' @param nbins For numerical columns (real/int), build a histogram of (at least) this many bins, then split at the best
+#'        point. Defaults to 20.
 #' @param nbins_top_level For numerical columns (real/int), build a histogram of (at most) this many bins at the root level, then
-#'        decrease by factor of two per level Defaults to 1024.
+#'        decrease by factor of two per level. Defaults to 1024.
 #' @param nbins_cats For categorical columns (factors), build a histogram of this many bins, then split at the best point. Higher
 #'        values can lead to more overfitting. Defaults to 1024.
 #' @param r2_stopping r2_stopping is no longer supported and will be ignored if set - please use stopping_rounds, stopping_metric
 #'        and stopping_tolerance instead. Previous version of H2O would stop making trees when the R^2 metric equals or
-#'        exceeds this Defaults to 1.797693135e+308.
+#'        exceeds this. Defaults to 1.797693135e+308.
 #' @param stopping_rounds Early stopping based on convergence of stopping_metric. Stop if simple moving average of length k of the
 #'        stopping_metric does not improve for k:=stopping_rounds scoring events (0 to disable) Defaults to 0.
 #' @param stopping_metric Metric to use for early stopping (AUTO: logloss for classification, deviance for regression). Note that custom
@@ -67,22 +67,22 @@
 #' @param build_tree_one_node \code{Logical}. Run on one node only; no network overhead but fewer cpus used.  Suitable for small datasets.
 #'        Defaults to FALSE.
 #' @param mtries Number of variables randomly sampled as candidates at each split. If set to -1, defaults to sqrt{p} for
-#'        classification and p/3 for regression (where p is the # of predictors Defaults to -1.
-#' @param sample_rate Row sample rate per tree (from 0.0 to 1.0) Defaults to 0.6320000291.
-#' @param sample_rate_per_class A list of row sample rates per class (relative fraction for each class, from 0.0 to 1.0), for each tree
+#'        classification and p/3 for regression (where p is the # of predictors. Defaults to -1.
+#' @param sample_rate Row sample rate per tree (from 0.0 to 1.0). Defaults to 0.6320000291.
+#' @param sample_rate_per_class A list of row sample rates per class (relative fraction for each class, from 0.0 to 1.0), for each tree.
 #' @param binomial_double_trees \code{Logical}. For binary classification: Build 2x as many trees (one per class) - can lead to higher
 #'        accuracy. Defaults to FALSE.
 #' @param checkpoint Model checkpoint to resume training with.
-#' @param col_sample_rate_change_per_level Relative change of the column sampling rate for every level (must be > 0.0 and <= 2.0) Defaults to 1.
-#' @param col_sample_rate_per_tree Column sample rate per tree (from 0.0 to 1.0) Defaults to 1.
-#' @param min_split_improvement Minimum relative improvement in squared error reduction for a split to happen Defaults to 1e-05.
-#' @param histogram_type What type of histogram to use for finding optimal split points Must be one of: "AUTO", "UniformAdaptive",
+#' @param col_sample_rate_change_per_level Relative change of the column sampling rate for every level (must be > 0.0 and <= 2.0). Defaults to 1.
+#' @param col_sample_rate_per_tree Column sample rate per tree (from 0.0 to 1.0). Defaults to 1.
+#' @param min_split_improvement Minimum relative improvement in squared error reduction for a split to happen. Defaults to 1e-05.
+#' @param histogram_type What type of histogram to use for finding optimal split points. Must be one of: "AUTO", "UniformAdaptive",
 #'        "Random", "QuantilesGlobal", "RoundRobin". Defaults to AUTO.
 #' @param categorical_encoding Encoding scheme for categorical features Must be one of: "AUTO", "Enum", "OneHotInternal", "OneHotExplicit",
 #'        "Binary", "Eigen", "LabelEncoder", "SortByResponse", "EnumLimited". Defaults to AUTO.
 #' @param calibrate_model \code{Logical}. Use Platt Scaling to calculate calibrated class probabilities. Calibration can provide more
 #'        accurate estimates of class probabilities. Defaults to FALSE.
-#' @param calibration_frame Calibration frame for Platt Scaling
+#' @param calibration_frame Calibration frame for Platt Scaling.
 #' @param distribution Distribution. This argument is deprecated and has no use for Random Forest.
 #' @param custom_metric_func Reference to custom evaluation function, format: `language:keyName=funcName`
 #' @param export_checkpoints_dir Automatically export generated models to this directory.

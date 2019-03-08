@@ -330,7 +330,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def seed(self):
         """
-        Seed for pseudo random number generator (if applicable)
+        Seed for pseudo random number generator (if applicable).
 
         Type: ``int``  (default: ``-1``).
         """
@@ -392,7 +392,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def quiet_mode(self):
         """
-        Enable quiet mode
+        Enable quiet mode.
 
         Type: ``bool``  (default: ``True``).
         """
@@ -482,7 +482,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def learn_rate(self):
         """
-        (same as eta) Learning rate (from 0.0 to 1.0)
+        (same as eta) Learning rate (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``0.3``).
         """
@@ -497,7 +497,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def eta(self):
         """
-        (same as learn_rate) Learning rate (from 0.0 to 1.0)
+        (same as learn_rate) Learning rate (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``0.3``).
         """
@@ -512,7 +512,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def sample_rate(self):
         """
-        (same as subsample) Row sample rate per tree (from 0.0 to 1.0)
+        (same as subsample) Row sample rate per tree (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``1``).
         """
@@ -527,7 +527,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def subsample(self):
         """
-        (same as sample_rate) Row sample rate per tree (from 0.0 to 1.0)
+        (same as sample_rate) Row sample rate per tree (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``1``).
         """
@@ -542,7 +542,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def col_sample_rate(self):
         """
-        (same as colsample_bylevel) Column sample rate (from 0.0 to 1.0)
+        (same as colsample_bylevel) Column sample rate (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``1``).
         """
@@ -557,7 +557,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def colsample_bylevel(self):
         """
-        (same as col_sample_rate) Column sample rate (from 0.0 to 1.0)
+        (same as col_sample_rate) Column sample rate (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``1``).
         """
@@ -572,7 +572,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def col_sample_rate_per_tree(self):
         """
-        (same as colsample_bytree) Column sample rate per tree (from 0.0 to 1.0)
+        (same as colsample_bytree) Column sample rate per tree (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``1``).
         """
@@ -587,7 +587,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def colsample_bytree(self):
         """
-        (same as col_sample_rate_per_tree) Column sample rate per tree (from 0.0 to 1.0)
+        (same as col_sample_rate_per_tree) Column sample rate per tree (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``1``).
         """
@@ -602,7 +602,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def max_abs_leafnode_pred(self):
         """
-        (same as max_delta_step) Maximum absolute value of a leaf node prediction
+        (same as max_delta_step) Maximum absolute value of a leaf node prediction.
 
         Type: ``float``  (default: ``0``).
         """
@@ -617,7 +617,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def max_delta_step(self):
         """
-        (same as max_abs_leafnode_pred) Maximum absolute value of a leaf node prediction
+        (same as max_abs_leafnode_pred) Maximum absolute value of a leaf node prediction.
 
         Type: ``float``  (default: ``0``).
         """
@@ -663,7 +663,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def min_split_improvement(self):
         """
-        (same as gamma) Minimum relative improvement in squared error reduction for a split to happen
+        (same as gamma) Minimum relative improvement in squared error reduction for a split to happen.
 
         Type: ``float``  (default: ``0``).
         """
@@ -678,7 +678,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def gamma(self):
         """
-        (same as min_split_improvement) Minimum relative improvement in squared error reduction for a split to happen
+        (same as min_split_improvement) Minimum relative improvement in squared error reduction for a split to happen.
 
         Type: ``float``  (default: ``0``).
         """
@@ -694,7 +694,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     def nthread(self):
         """
         Number of parallel threads that can be used to run XGBoost. Cannot exceed H2O cluster limits (-nthreads
-        parameter). Defaults to maximum available
+        parameter). Defaults to maximum available.
 
         Type: ``int``  (default: ``-1``).
         """
@@ -709,7 +709,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def max_bins(self):
         """
-        For tree_method=hist only: maximum number of bins
+        For tree_method=hist only: maximum number of bins.
 
         Type: ``int``  (default: ``256``).
         """
@@ -724,7 +724,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def max_leaves(self):
         """
-        For tree_method=hist only: maximum number of leaves
+        For tree_method=hist only: maximum number of leaves.
 
         Type: ``int``  (default: ``0``).
         """
@@ -739,7 +739,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def min_sum_hessian_in_leaf(self):
         """
-        For tree_method=hist only: the mininum sum of hessian in a leaf to keep splitting
+        For tree_method=hist only: the mininum sum of hessian in a leaf to keep splitting.
 
         Type: ``float``  (default: ``100``).
         """
@@ -754,7 +754,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def min_data_in_leaf(self):
         """
-        For tree_method=hist only: the mininum data in a leaf to keep splitting
+        For tree_method=hist only: the mininum data in a leaf to keep splitting.
 
         Type: ``float``  (default: ``0``).
         """
@@ -769,7 +769,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def sample_type(self):
         """
-        For booster=dart only: sample_type
+        For booster=dart only: sample_type.
 
         One of: ``"uniform"``, ``"weighted"``  (default: ``"uniform"``).
         """
@@ -784,7 +784,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def normalize_type(self):
         """
-        For booster=dart only: normalize_type
+        For booster=dart only: normalize_type.
 
         One of: ``"tree"``, ``"forest"``  (default: ``"tree"``).
         """
@@ -799,7 +799,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def rate_drop(self):
         """
-        For booster=dart only: rate_drop (0..1)
+        For booster=dart only: rate_drop (0..1).
 
         Type: ``float``  (default: ``0``).
         """
@@ -814,7 +814,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def one_drop(self):
         """
-        For booster=dart only: one_drop
+        For booster=dart only: one_drop.
 
         Type: ``bool``  (default: ``False``).
         """
@@ -829,7 +829,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def skip_drop(self):
         """
-        For booster=dart only: skip_drop (0..1)
+        For booster=dart only: skip_drop (0..1).
 
         Type: ``float``  (default: ``0``).
         """
@@ -844,7 +844,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def tree_method(self):
         """
-        Tree method
+        Tree method.
 
         One of: ``"auto"``, ``"exact"``, ``"approx"``, ``"hist"``  (default: ``"auto"``).
         """
@@ -859,7 +859,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def grow_policy(self):
         """
-        Grow policy - depthwise is standard GBM, lossguide is LightGBM
+        Grow policy - depthwise is standard GBM, lossguide is LightGBM.
 
         One of: ``"depthwise"``, ``"lossguide"``  (default: ``"depthwise"``).
         """
@@ -874,7 +874,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def booster(self):
         """
-        Booster type
+        Booster type.
 
         One of: ``"gbtree"``, ``"gblinear"``, ``"dart"``  (default: ``"gbtree"``).
         """
@@ -889,7 +889,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def reg_lambda(self):
         """
-        L2 regularization
+        L2 regularization.
 
         Type: ``float``  (default: ``1``).
         """
@@ -904,7 +904,7 @@ class H2OXGBoostEstimator(H2OEstimator):
     @property
     def reg_alpha(self):
         """
-        L1 regularization
+        L1 regularization.
 
         Type: ``float``  (default: ``0``).
         """

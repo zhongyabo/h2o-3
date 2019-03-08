@@ -256,6 +256,16 @@ class H2OPrincipalComponentAnalysisEstimator(H2OEstimator):
 
 
     @property
+    def seed_string(self):
+        """
+        RNG seed for initialization as string
+
+        Type: ``str``  (default: ``"-1"``).
+        """
+        if self._parms.get("seed") is not None: return str(self._parms.get("seed"))
+        return None
+
+    @property
     def max_runtime_secs(self):
         """
         Maximum allowed runtime in seconds for model training. Use 0 to disable.

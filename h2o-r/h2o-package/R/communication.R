@@ -121,7 +121,6 @@
       postBody <- sub('\"\\{', '\\{',postBody)
       postBody <- sub('\\}\"', '\\}',postBody)
     }
-    
   .__curlError = FALSE
   .__curlErrorMessage = ""
   httpStatusCode = -1L
@@ -313,6 +312,7 @@
   if (missing(h2oRestApiVersion)) {
     h2oRestApiVersion = .h2o.__REST_API_VERSION
   }
+    
   .h2o.doRawREST(conn = conn, h2oRestApiVersion = h2oRestApiVersion, urlSuffix = urlSuffix,
                  parms = parms, method = method, fileUploadInfo,autoML=autoML, ...)
 }
@@ -499,6 +499,7 @@
   processTables(res)
 }
 
+
 .format.helper <- function(x, format) {
     tryCatch(
       if( is.list(x) ) lapply(x, .format.helper, format)
@@ -581,6 +582,7 @@ print.H2OTable <- function(x, header=TRUE, ...) {
   }
 
   rawREST <- ""
+    
   if( !is.null(timeout) ){
     rawREST <- .h2o.doSafeREST(h2oRestApiVersion = h2oRestApiVersion, urlSuffix = page, parms = .params, method = method, timeout = timeout)
   }else if(autoML == TRUE){
@@ -588,9 +590,11 @@ print.H2OTable <- function(x, header=TRUE, ...) {
   }else{
     rawREST <- .h2o.doSafeREST(h2oRestApiVersion = h2oRestApiVersion, urlSuffix = page, parms = .params, method = method)
   }
+  print(rawREST)  
   if(raw) rawREST
-  else .h2o.fromJSON(jsonlite::fromJSON(rawREST,simplifyDataFrame=FALSE))
+  else      .h2o.fromJSON(jsonlite::fromJSON(rawREST,simplifyDataFrame=FALSE))
 }
+
 
 #-----------------------------------------------------------------------------------------------------------------------
 #   H2O Server Health & Info

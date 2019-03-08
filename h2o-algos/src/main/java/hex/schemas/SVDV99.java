@@ -17,10 +17,11 @@ public class SVDV99 extends ModelBuilderSchema<SVD,SVDV99,SVDV99.SVDParametersV9
         "ignore_const_cols",
         "score_each_iteration",
         "transform",
-                "svd_method",
+        "svd_method",
         "nv",
         "max_iterations",
         "seed",
+        "seed_string",    
         "keep_u",
         "u_name",
         "use_all_factor_levels",
@@ -42,6 +43,9 @@ public class SVDV99 extends ModelBuilderSchema<SVD,SVDV99,SVDV99.SVDParametersV9
 
     @API(help = "RNG seed for k-means++ initialization")
     public long seed;
+
+    @API(help = "RNG seed for k-means++ initialization as string", direction = API.Direction.OUTPUT, level = API.Level.expert)
+    public String seed_string;
 
     @API(help = "Save left singular vectors?")
     public boolean keep_u;

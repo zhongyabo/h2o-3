@@ -48,45 +48,46 @@
 #' @param tweedie_power Tweedie power for Tweedie regression, must be between 1 and 2. Defaults to 1.5.
 #' @param categorical_encoding Encoding scheme for categorical features Must be one of: "AUTO", "Enum", "OneHotInternal", "OneHotExplicit",
 #'        "Binary", "Eigen", "LabelEncoder", "SortByResponse", "EnumLimited". Defaults to AUTO.
-#' @param quiet_mode \code{Logical}. Enable quiet mode Defaults to TRUE.
+#' @param quiet_mode \code{Logical}. Enable quiet mode. Defaults to TRUE.
 #' @param export_checkpoints_dir Automatically export generated models to this directory.
 #' @param ntrees (same as n_estimators) Number of trees. Defaults to 50.
 #' @param max_depth Maximum tree depth. Defaults to 6.
 #' @param min_rows (same as min_child_weight) Fewest allowed (weighted) observations in a leaf. Defaults to 1.
 #' @param min_child_weight (same as min_rows) Fewest allowed (weighted) observations in a leaf. Defaults to 1.
-#' @param learn_rate (same as eta) Learning rate (from 0.0 to 1.0) Defaults to 0.3.
-#' @param eta (same as learn_rate) Learning rate (from 0.0 to 1.0) Defaults to 0.3.
-#' @param sample_rate (same as subsample) Row sample rate per tree (from 0.0 to 1.0) Defaults to 1.
-#' @param subsample (same as sample_rate) Row sample rate per tree (from 0.0 to 1.0) Defaults to 1.
-#' @param col_sample_rate (same as colsample_bylevel) Column sample rate (from 0.0 to 1.0) Defaults to 1.
-#' @param colsample_bylevel (same as col_sample_rate) Column sample rate (from 0.0 to 1.0) Defaults to 1.
-#' @param col_sample_rate_per_tree (same as colsample_bytree) Column sample rate per tree (from 0.0 to 1.0) Defaults to 1.
-#' @param colsample_bytree (same as col_sample_rate_per_tree) Column sample rate per tree (from 0.0 to 1.0) Defaults to 1.
-#' @param max_abs_leafnode_pred (same as max_delta_step) Maximum absolute value of a leaf node prediction Defaults to 0.0.
-#' @param max_delta_step (same as max_abs_leafnode_pred) Maximum absolute value of a leaf node prediction Defaults to 0.0.
+#' @param learn_rate (same as eta) Learning rate (from 0.0 to 1.0). Defaults to 0.3.
+#' @param eta (same as learn_rate) Learning rate (from 0.0 to 1.0). Defaults to 0.3.
+#' @param sample_rate (same as subsample) Row sample rate per tree (from 0.0 to 1.0). Defaults to 1.
+#' @param subsample (same as sample_rate) Row sample rate per tree (from 0.0 to 1.0). Defaults to 1.
+#' @param col_sample_rate (same as colsample_bylevel) Column sample rate (from 0.0 to 1.0). Defaults to 1.
+#' @param colsample_bylevel (same as col_sample_rate) Column sample rate (from 0.0 to 1.0). Defaults to 1.
+#' @param col_sample_rate_per_tree (same as colsample_bytree) Column sample rate per tree (from 0.0 to 1.0). Defaults to 1.
+#' @param colsample_bytree (same as col_sample_rate_per_tree) Column sample rate per tree (from 0.0 to 1.0). Defaults to 1.
+#' @param max_abs_leafnode_pred (same as max_delta_step) Maximum absolute value of a leaf node prediction. Defaults to 0.0.
+#' @param max_delta_step (same as max_abs_leafnode_pred) Maximum absolute value of a leaf node prediction. Defaults to 0.0.
 #' @param monotone_constraints A mapping representing monotonic constraints. Use +1 to enforce an increasing constraint and -1 to specify a
 #'        decreasing constraint.
 #' @param score_tree_interval Score the model after every so many trees. Disabled if set to 0. Defaults to 0.
-#' @param min_split_improvement (same as gamma) Minimum relative improvement in squared error reduction for a split to happen Defaults to 0.0.
-#' @param gamma (same as min_split_improvement) Minimum relative improvement in squared error reduction for a split to happen
+#' @param min_split_improvement (same as gamma) Minimum relative improvement in squared error reduction for a split to happen. Defaults to
+#'        0.0.
+#' @param gamma (same as min_split_improvement) Minimum relative improvement in squared error reduction for a split to happen.
 #'        Defaults to 0.0.
 #' @param nthread Number of parallel threads that can be used to run XGBoost. Cannot exceed H2O cluster limits (-nthreads
-#'        parameter). Defaults to maximum available Defaults to -1.
-#' @param max_bins For tree_method=hist only: maximum number of bins Defaults to 256.
-#' @param max_leaves For tree_method=hist only: maximum number of leaves Defaults to 0.
-#' @param min_sum_hessian_in_leaf For tree_method=hist only: the mininum sum of hessian in a leaf to keep splitting Defaults to 100.0.
-#' @param min_data_in_leaf For tree_method=hist only: the mininum data in a leaf to keep splitting Defaults to 0.0.
-#' @param sample_type For booster=dart only: sample_type Must be one of: "uniform", "weighted". Defaults to uniform.
-#' @param normalize_type For booster=dart only: normalize_type Must be one of: "tree", "forest". Defaults to tree.
-#' @param rate_drop For booster=dart only: rate_drop (0..1) Defaults to 0.0.
-#' @param one_drop \code{Logical}. For booster=dart only: one_drop Defaults to FALSE.
-#' @param skip_drop For booster=dart only: skip_drop (0..1) Defaults to 0.0.
-#' @param tree_method Tree method Must be one of: "auto", "exact", "approx", "hist". Defaults to auto.
-#' @param grow_policy Grow policy - depthwise is standard GBM, lossguide is LightGBM Must be one of: "depthwise", "lossguide".
+#'        parameter). Defaults to maximum available. Defaults to -1.
+#' @param max_bins For tree_method=hist only: maximum number of bins. Defaults to 256.
+#' @param max_leaves For tree_method=hist only: maximum number of leaves. Defaults to 0.
+#' @param min_sum_hessian_in_leaf For tree_method=hist only: the mininum sum of hessian in a leaf to keep splitting. Defaults to 100.0.
+#' @param min_data_in_leaf For tree_method=hist only: the mininum data in a leaf to keep splitting. Defaults to 0.0.
+#' @param sample_type For booster=dart only: sample_type. Must be one of: "uniform", "weighted". Defaults to uniform.
+#' @param normalize_type For booster=dart only: normalize_type. Must be one of: "tree", "forest". Defaults to tree.
+#' @param rate_drop For booster=dart only: rate_drop (0..1). Defaults to 0.0.
+#' @param one_drop \code{Logical}. For booster=dart only: one_drop. Defaults to FALSE.
+#' @param skip_drop For booster=dart only: skip_drop (0..1). Defaults to 0.0.
+#' @param tree_method Tree method. Must be one of: "auto", "exact", "approx", "hist". Defaults to auto.
+#' @param grow_policy Grow policy - depthwise is standard GBM, lossguide is LightGBM. Must be one of: "depthwise", "lossguide".
 #'        Defaults to depthwise.
-#' @param booster Booster type Must be one of: "gbtree", "gblinear", "dart". Defaults to gbtree.
-#' @param reg_lambda L2 regularization Defaults to 1.0.
-#' @param reg_alpha L1 regularization Defaults to 0.0.
+#' @param booster Booster type. Must be one of: "gbtree", "gblinear", "dart". Defaults to gbtree.
+#' @param reg_lambda L2 regularization. Defaults to 1.0.
+#' @param reg_alpha L1 regularization. Defaults to 0.0.
 #' @param dmatrix_type Type of DMatrix. For sparse, NAs and 0 are treated equally. Must be one of: "auto", "dense", "sparse".
 #'        Defaults to auto.
 #' @param backend Backend. By default (auto), a GPU is used if available. Must be one of: "auto", "gpu", "cpu". Defaults to

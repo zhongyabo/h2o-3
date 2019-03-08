@@ -530,6 +530,16 @@ class H2ODeepLearningEstimator(H2OEstimator):
 
 
     @property
+    def seed_string(self):
+        """
+        Seed for random numbers (affects sampling) as string.
+
+        Type: ``str``  (default: ``"-1"``).
+        """
+        if self._parms.get("seed") is not None: return str(self._parms.get("seed"))
+        return None
+
+    @property
     def adaptive_rate(self):
         """
         Adaptive learning rate.

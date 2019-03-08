@@ -33,7 +33,7 @@ def bernoulli_gbm():
   gbm_h2o = H2OGradientBoostingEstimator(ntrees=ntrees, learn_rate=learning_rate,
                                          max_depth=depth,
                                          min_rows=min_rows,
-                                         distribution="bernoulli")
+                                         distribution="bernoulli", seed = 22)
   gbm_h2o.train(x=list(range(1,prostate_train.ncol)),y="CAPSULE", training_frame=prostate_train)
 
   # Build scikit GBM classification model

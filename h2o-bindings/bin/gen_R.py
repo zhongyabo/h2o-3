@@ -36,7 +36,7 @@ def gen_module(schema, algo, module):
             yield line.lstrip()
 
     for param in schema["parameters"]:
-        if param["name"] in ["ignored_columns", "response_column", "max_confusion_matrix_size"]:
+        if param["name"] in ["ignored_columns", "response_column", "max_confusion_matrix_size", "seed_string"]:
             continue
         if algo == "drf":
             if param["name"] == "offset_column":
@@ -108,7 +108,7 @@ def gen_module(schema, algo, module):
     # yield indent("training_frame,", 17 + len(algo))
     list = []
     for param in schema["parameters"]:
-        if param["name"] in ["ignored_columns", "response_column", "max_confusion_matrix_size", "training_frame"]:
+        if param["name"] in ["ignored_columns", "response_column", "max_confusion_matrix_size", "training_frame", "seed_string"]:
             continue
         if algo == "naivebayes":
             if param["name"] == "min_sdev":
@@ -293,7 +293,7 @@ def gen_module(schema, algo, module):
         yield "  if (!missing(metalearner_params))"
         yield "      parms$metalearner_params <- as.character(toJSON(metalearner_params, pretty = TRUE))"
     for param in schema["parameters"]:
-        if param["name"] in ["ignored_columns", "response_column", "training_frame", "max_confusion_matrix_size"]:
+        if param["name"] in ["ignored_columns", "response_column", "training_frame", "max_confusion_matrix_size", "seed_string"]:
             continue
         if algo == "glm" and param["name"] in ["interactions", "nfolds", "beta_constraints", "missing_values_handling"]:
             continue

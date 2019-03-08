@@ -39,9 +39,9 @@
 #'        be automatically computed to obtain class balance during training. Requires balance_classes.
 #' @param max_after_balance_size Maximum relative size of the training data after balancing class counts (can be less than 1.0). Requires
 #'        balance_classes. Defaults to 5.0.
-#' @param max_hit_ratio_k Max. number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable)
+#' @param max_hit_ratio_k Max. number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable).
 #'        Defaults to 0.
-#' @param laplace Laplace smoothing parameter Defaults to 0.
+#' @param laplace Laplace smoothing parameter. Defaults to 0.
 #' @param threshold This argument is deprecated, use `min_sdev` instead. The minimum standard deviation to use for observations without enough data. 
 #'                  Must be at least 1e-10.
 #' @param min_sdev The minimum standard deviation to use for observations without enough data. 
@@ -50,7 +50,7 @@
 #' @param eps_sdev A threshold cutoff to deal with numeric instability, must be positive.
 #' @param min_prob Min. probability to use for observations with not enough data.
 #' @param eps_prob Cutoff below which probability is replaced with min_prob.
-#' @param compute_metrics \code{Logical}. Compute metrics on training data Defaults to TRUE.
+#' @param compute_metrics \code{Logical}. Compute metrics on training data. Defaults to TRUE.
 #' @param max_runtime_secs Maximum allowed runtime in seconds for model training. Use 0 to disable. Defaults to 0.
 #' @param export_checkpoints_dir Automatically export generated models to this directory.
 #' @details The naive Bayes classifier assumes independence between predictor variables conditional         on the

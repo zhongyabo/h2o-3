@@ -103,7 +103,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def seed(self):
         """
-        Seed for pseudo random number generator (if applicable)
+        Seed for pseudo random number generator (if applicable).
 
         Type: ``int``  (default: ``-1``).
         """
@@ -114,6 +114,16 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
         assert_is_type(seed, None, int)
         self._parms["seed"] = seed
 
+
+    @property
+    def seed_string(self):
+        """
+        Seed for pseudo random number generator (if applicable) as string.
+
+        Type: ``str``  (default: ``"-1"``).
+        """
+        if self._parms.get("seed") is not None: return str(self._parms.get("seed"))
+        return None
 
     @property
     def keep_cross_validation_models(self):
@@ -383,7 +393,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def lambda_search(self):
         """
-        Use lambda search starting at lambda max, given lambda is then interpreted as lambda min
+        Use lambda search starting at lambda max, given lambda is then interpreted as lambda min.
 
         Type: ``bool``  (default: ``False``).
         """
@@ -398,7 +408,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def early_stopping(self):
         """
-        Stop early when there is no more relative improvement on train or validation (if provided)
+        Stop early when there is no more relative improvement on train or validation (if provided).
 
         Type: ``bool``  (default: ``True``).
         """
@@ -429,7 +439,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def standardize(self):
         """
-        Standardize numeric columns to have zero mean and unit variance
+        Standardize numeric columns to have zero mean and unit variance.
 
         Type: ``bool``  (default: ``True``).
         """
@@ -459,7 +469,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def compute_p_values(self):
         """
-        Request p-values computation, p-values work only with IRLSM solver and no regularization
+        Request p-values computation, p-values work only with IRLSM solver and no regularization.
 
         Type: ``bool``  (default: ``False``).
         """
@@ -474,7 +484,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def remove_collinear_columns(self):
         """
-        In case of linearly dependent columns, remove some of the dependent columns
+        In case of linearly dependent columns, remove some of the dependent columns.
 
         Type: ``bool``  (default: ``False``).
         """
@@ -504,7 +514,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def non_negative(self):
         """
-        Restrict coefficients (not intercept) to be non-negative
+        Restrict coefficients (not intercept) to be non-negative.
 
         Type: ``bool``  (default: ``False``).
         """
@@ -519,7 +529,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def max_iterations(self):
         """
-        Maximum number of iterations
+        Maximum number of iterations.
 
         Type: ``int``  (default: ``-1``).
         """
@@ -552,7 +562,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def beta_epsilon(self):
         """
-        Converge if  beta changes less (using L-infinity norm) than beta esilon, ONLY applies to IRLSM solver
+        Converge if  beta changes less (using L-infinity norm) than beta esilon, ONLY applies to IRLSM solver.
 
         Type: ``float``  (default: ``0.0001``).
         """
@@ -697,7 +707,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def obj_reg(self):
         """
-        Likelihood divider in objective value computation, default is 1/nobs
+        Likelihood divider in objective value computation, default is 1/nobs.
 
         Type: ``float``  (default: ``-1``).
         """
@@ -789,7 +799,7 @@ class H2OGeneralizedLinearEstimator(H2OEstimator):
     @property
     def max_hit_ratio_k(self):
         """
-        Maximum number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable)
+        Maximum number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable).
 
         Type: ``int``  (default: ``0``).
         """

@@ -38,6 +38,7 @@ public class GLRMV3 extends ModelBuilderSchema<GLRM, GLRMV3, GLRMV3.GLRMParamete
         "init_step_size",
         "min_step_size",
         "seed",
+        "seed_string",    
         "init",
         "svd_method",
         "user_y",
@@ -96,6 +97,9 @@ public class GLRMV3 extends ModelBuilderSchema<GLRM, GLRMV3, GLRMV3.GLRMParamete
 
     @API(help = "RNG seed for initialization", gridable = true)
     public long seed;
+
+    @API(help = "RNG seed for initialization as string", level = API.Level.expert, gridable = true, direction = API.Direction.OUTPUT)
+    public String seed_string;
 
     @API(help = "Initialization mode", values = { "Random", "SVD", "PlusPlus", "User" }, gridable = true) // TODO: pull out of categorical class
     public GlrmInitialization init;

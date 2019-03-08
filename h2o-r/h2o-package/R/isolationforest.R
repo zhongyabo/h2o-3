@@ -28,8 +28,8 @@
 #'        Defaults to 256.
 #' @param sample_rate Rate of randomly sampled observations used to train each Isolation Forest tree. Needs to be in range from 0.0
 #'        to 1.0. If set to -1, sample_rate is disabled and sample_size will be used instead. Defaults to -1.
-#' @param col_sample_rate_change_per_level Relative change of the column sampling rate for every level (must be > 0.0 and <= 2.0) Defaults to 1.
-#' @param col_sample_rate_per_tree Column sample rate per tree (from 0.0 to 1.0) Defaults to 1.
+#' @param col_sample_rate_change_per_level Relative change of the column sampling rate for every level (must be > 0.0 and <= 2.0). Defaults to 1.
+#' @param col_sample_rate_per_tree Column sample rate per tree (from 0.0 to 1.0). Defaults to 1.
 #' @param categorical_encoding Encoding scheme for categorical features Must be one of: "AUTO", "Enum", "OneHotInternal", "OneHotExplicit",
 #'        "Binary", "Eigen", "LabelEncoder", "SortByResponse", "EnumLimited". Defaults to AUTO.
 #' @param export_checkpoints_dir Automatically export generated models to this directory.

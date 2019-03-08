@@ -326,7 +326,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def max_confusion_matrix_size(self):
         """
-        [Deprecated] Maximum size (# classes) for confusion matrices to be printed in the Logs
+        [Deprecated] Maximum size (# classes) for confusion matrices to be printed in the Logs.
 
         Type: ``int``  (default: ``20``).
         """
@@ -341,7 +341,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def max_hit_ratio_k(self):
         """
-        Max. number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable)
+        Max. number (top K) of predictions to use for hit ratio computation (for multi-class only, 0 to disable).
 
         Type: ``int``  (default: ``0``).
         """
@@ -401,7 +401,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def nbins(self):
         """
-        For numerical columns (real/int), build a histogram of (at least) this many bins, then split at the best point
+        For numerical columns (real/int), build a histogram of (at least) this many bins, then split at the best point.
 
         Type: ``int``  (default: ``20``).
         """
@@ -417,7 +417,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     def nbins_top_level(self):
         """
         For numerical columns (real/int), build a histogram of (at most) this many bins at the root level, then decrease
-        by factor of two per level
+        by factor of two per level.
 
         Type: ``int``  (default: ``1024``).
         """
@@ -450,7 +450,7 @@ class H2ORandomForestEstimator(H2OEstimator):
         """
         r2_stopping is no longer supported and will be ignored if set - please use stopping_rounds, stopping_metric and
         stopping_tolerance instead. Previous version of H2O would stop making trees when the R^2 metric equals or
-        exceeds this
+        exceeds this.
 
         Type: ``float``  (default: ``1.797693135e+308``).
         """
@@ -529,7 +529,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def seed(self):
         """
-        Seed for pseudo random number generator (if applicable)
+        Seed for pseudo random number generator (if applicable).
 
         Type: ``int``  (default: ``-1``).
         """
@@ -540,6 +540,16 @@ class H2ORandomForestEstimator(H2OEstimator):
         assert_is_type(seed, None, int)
         self._parms["seed"] = seed
 
+
+    @property
+    def seed_string(self):
+        """
+        Seed for pseudo random number generator (if applicable) as string.
+
+        Type: ``str``  (default: ``"-1"``).
+        """
+        if self._parms.get("seed") is not None: return str(self._parms.get("seed"))
+        return None
 
     @property
     def build_tree_one_node(self):
@@ -560,7 +570,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     def mtries(self):
         """
         Number of variables randomly sampled as candidates at each split. If set to -1, defaults to sqrt{p} for
-        classification and p/3 for regression (where p is the # of predictors
+        classification and p/3 for regression (where p is the # of predictors.
 
         Type: ``int``  (default: ``-1``).
         """
@@ -575,7 +585,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def sample_rate(self):
         """
-        Row sample rate per tree (from 0.0 to 1.0)
+        Row sample rate per tree (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``0.6320000291``).
         """
@@ -590,7 +600,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def sample_rate_per_class(self):
         """
-        A list of row sample rates per class (relative fraction for each class, from 0.0 to 1.0), for each tree
+        A list of row sample rates per class (relative fraction for each class, from 0.0 to 1.0), for each tree.
 
         Type: ``List[float]``.
         """
@@ -635,7 +645,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def col_sample_rate_change_per_level(self):
         """
-        Relative change of the column sampling rate for every level (must be > 0.0 and <= 2.0)
+        Relative change of the column sampling rate for every level (must be > 0.0 and <= 2.0).
 
         Type: ``float``  (default: ``1``).
         """
@@ -650,7 +660,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def col_sample_rate_per_tree(self):
         """
-        Column sample rate per tree (from 0.0 to 1.0)
+        Column sample rate per tree (from 0.0 to 1.0).
 
         Type: ``float``  (default: ``1``).
         """
@@ -665,7 +675,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def min_split_improvement(self):
         """
-        Minimum relative improvement in squared error reduction for a split to happen
+        Minimum relative improvement in squared error reduction for a split to happen.
 
         Type: ``float``  (default: ``1e-05``).
         """
@@ -680,7 +690,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def histogram_type(self):
         """
-        What type of histogram to use for finding optimal split points
+        What type of histogram to use for finding optimal split points.
 
         One of: ``"auto"``, ``"uniform_adaptive"``, ``"random"``, ``"quantiles_global"``, ``"round_robin"``  (default:
         ``"auto"``).
@@ -728,7 +738,7 @@ class H2ORandomForestEstimator(H2OEstimator):
     @property
     def calibration_frame(self):
         """
-        Calibration frame for Platt Scaling
+        Calibration frame for Platt Scaling.
 
         Type: ``H2OFrame``.
         """
